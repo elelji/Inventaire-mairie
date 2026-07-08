@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Permissions — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec ligne tech violette harmonisée */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Carte de configuration Cockpit */
+    .perm-card {
+        background: #ffffff;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Style personnalisé des lignes de privilèges */
+    .perm-item {
+        padding: 0.85rem 1rem;
+        border-radius: 8px 2px;
+        background-color: var(--tech-card-inner);
+        border: 1px solid var(--tech-border);
+        border-left: 3px solid transparent;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* [Look Scanner Hover] Allumage au survol de la permission */
+    .perm-item:hover {
+        background-color: #ffffff;
+        border-left-color: #6366f1 !important;
+        border-top-color: var(--accent-light) !important;
+        border-right-color: var(--accent-light) !important;
+        border-bottom-color: var(--accent-light) !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
+    }
+
+    /* Ajustement des interrupteurs / switchs sur la palette Indigo */
+    .form-check-input:checked {
+        background-color: #4338ca !important;
+        border-color: #4338ca !important;
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--accent-light) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    }
+
+    /* Boutons calibrés DSI */
+    .btn-tech-primary {
+        background-color: #4338ca !important;
+        border-color: #4338ca !important;
+        color: #ffffff !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px 2px;
+        transition: all 0.15s ease;
+    }
+    .btn-tech-primary:hover {
+        background-color: #312e81 !important;
+        border-color: #312e81 !important;
+    }
+
+    .btn-tech-secondary {
+        background-color: #ffffff !important;
+        border: 1px solid var(--tech-border) !important;
+        color: #4b5563 !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px 2px;
+    }
+    .btn-tech-secondary:hover {
+        background-color: #f8fafc !important;
+        border-color: var(--tech-border) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="section-title"><i class="bi bi-shield-lock-fill"></i> Sécurité</div>
+    <h1 class="h4 fw-bold text-dark">Gestion des permissions</h1>
+    <p class="text-muted small">Ajustez les privilèges et accès de sécurité accordés aux profils de type <strong class="text-dark">Technicien</strong>.</p>
+</div>
+
+<div class="row">
+    <div class="col-xl-6 col-lg-8 col-md-10 mx-auto">
+        <div class="perm-card">
+            
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <i class="bi bi-sliders fs-4" style="color: #4338ca;"></i>
+                <h2 class="h5 fw-bold m-0 text-dark">Droits d'accès du profil</h2>
+            </div>
+
+            <form method="post" action="/admin/permissions">
+                <div class="d-flex flex-column gap-2 mb-4">
+                    {% for perm in permissions %}
+                    <div class="perm-item d-flex align-items-center justify-content-between">
+                        <label class="form-check-label fw-semibold flex-grow-1" for="perm_{{ loop.index }}" style="color: #1e1b4b; cursor: pointer; font-size: 0.88rem;">
+                            <i class="bi bi-shield-check me-2" style="color: #6366f1;"></i>
+                            {{ perm.label if perm.label else 'Droit non défini' }}
+                        </label>
+                        <div class="form-check form-switch m-0 fs-5">
+                            <input class="form-check-input" type="checkbox" role="switch" 
+                                   name="permission" value="{{ perm.nom }}" 
+                                   id="perm_{{ loop.index }}"
+                                   {% if perm.actif_pour_technicien %}checked{% endif %}
+                                   style="cursor: pointer;">
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small text-center py-4">
+                        <i class="bi bi-lock fs-3 d-block mb-2 text-muted"></i> Aucune règle de permission enregistrée.
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Actions de validation -->
+                <div class="d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--tech-border) !important;">
+                    <a href="/" class="btn btn-tech-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-tech-primary">
+                        <i class="bi bi-save me-1"></i> Enregistrer les privilèges
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

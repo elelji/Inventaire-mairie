@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Export Données — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Ligne technique avec point de contrôle lumineux */
+    .section-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #6366f1 !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 700;
+    }
+    .section-title::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #6366f1;
+        box-shadow: 0 0 10px #6366f1, 0 0 4px #6366f1;
+        border-radius: 50%;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), transparent);
+    }
+
+    /* --- LAYOUT COCKPIT INTERACTIF --- */
+    .export-layout {
+        display: grid;
+        grid-template-columns: 8.5fr 3.5fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+        .export-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- PANNEAUX DE LA SÉLECTION (STYLE CONSOLE BRIGHT) --- */
+    .filter-main-panel {
+        background: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.03);
+    }
+
+    /* Boîtes de paramètres individuelles teintées */
+    .filter-console-box {
+        background: #f8fafc;
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        border-radius: 8px 2px;
+        padding: 1rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .filter-console-box:focus-within {
+        border-color: #6366f1;
+        background: #ffffff;
+        box-shadow: 0 0 0 1px #6366f1, 0 8px 25px -6px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Customisation de la sélection multiple (Monochrome & Épurée) */
+    .tech-select-multiple {
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        background-color: transparent;
+        font-family: var(--bs-font-monospace), monospace;
+        font-size: 0.8rem;
+        color: #1e293b; /* Ajusté en noir/anthracite pour contraste propre */
+        border-radius: 4px;
+        padding: 0.3rem;
+    }
+    .tech-select-multiple:focus {
+        border-color: transparent;
+        box-shadow: none;
+    }
+    .tech-select-multiple option {
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        margin-bottom: 0.15rem;
+        color: #1e293b; /* Rendu des lignes non cochées en noir mat */
+        transition: all 0.1s ease;
+    }
+    /* Sélection sobre : Fond uni violet intense / Texte Blanc */
+    .tech-select-multiple option:checked {
+        background: #4338ca !important;
+        color: #ffffff !important; /* Texte en blanc pur une fois coché */
+    }
+
+    /* --- PANNEAU DE COMPILATION (DROITE) --- */
+    .action-control-panel {
+        background: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 12px 2px;
+        padding: 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.05);
+    }
+
+    .notice-card {
+        background: #f5f3ff;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-left: 3px solid #6366f1;
+        border-radius: 4px;
+        padding: 0.85rem;
+    }
+
+    /* --- BOUTONS UNIS LUMINEUX AVEC EFFET GLOW (SANS DEGRADES) --- */
+    .btn-action-tech {
+        border: 1px solid transparent;
+        border-radius: 6px 2px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        letter-spacing: 0.04em;
+        padding: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+    /* Version PDF : Violet Électrique Uni avec fort Glow au survol */
+    .btn-pdf {
+        background: #6366f1;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+    }
+    .btn-pdf:hover {
+        background: #4f46e5;
+        box-shadow: 0 6px 25px rgba(99, 102, 241, 0.45), 0 0 15px rgba(99, 102, 241, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Version Excel : Vert Émeraude Lumineux Uni avec fort Glow au survol */
+    .btn-excel {
+        background: #10b981;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+    }
+    .btn-excel:hover {
+        background: #059669;
+        box-shadow: 0 6px 25px rgba(16, 185, 129, 0.45), 0 0 15px rgba(16, 185, 129, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .btn-action-tech:active {
+        transform: translateY(1px) !important;
+        box-shadow: none !important;
+    }
+
+    /* Entrées de Date affûtées et lumineuses */
+    .tech-date-input {
+        border: 1px solid rgba(99, 102, 241, 0.2); 
+        border-radius: 4px;
+        font-size: 0.85rem;
+        padding: 0.5rem;
+        color: #4338ca;
+        background-color: #ffffff;
+        font-weight: 600;
+    }
+    .tech-date-input:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+        outline: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="page-subtitle text-primary small text-uppercase fw-bold mb-1" style="letter-spacing: 0.08em; color: #6366f1 !important;">[ EXTRACTION ]</div>
+    <h1 class="h4 fw-bold" style="color: #4338ca;">Compilateur et filtres de base</h1>
+</div>
+
+<form method="post" action="/export">
+    <div class="export-layout">
+
+        <!-- CORE DE FILTRAGE (GAUCHE) -->
+        <div class="filter-main-panel">
+            <div class="section-title">Filtres d'isolation</div>
+            
+            <div class="row g-3">
+                
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="filter-console-box">
+                        <input type="text" id="recherche-lieu" placeholder="Rechercher..." class="form-control form-control-sm mb-2">
+                        <label class="form-label small fw-bold mb-2" style="color: #4338ca;"><i class="bi bi-geo-alt me-1"></i> Établissement</label>
+                        <select name="lieux" multiple class="form-select tech-select-multiple" size="6">
+                            {% for lieu, total in lieux %}
+                            <option value="{{ lieu }}">{{ lieu }} [{{ total }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="filter-console-box">
+                        <label class="form-label small fw-bold mb-2" style="color: #4338ca;"><i class="bi bi-grid me-1"></i> Catégorie</label>
+                        <select name="categories" multiple class="form-select tech-select-multiple" size="6">
+                            {% for cat, total in categories %}
+                            <option value="{{ cat }}">{{ cat }} [{{ total }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="filter-console-box">
+                        <label class="form-label small fw-bold mb-2" style="color: #4338ca;"><i class="bi bi-tag me-1"></i> Constructeur</label>
+                        <select name="marques" multiple class="form-select tech-select-multiple" size="6">
+                            {% for marque, total in marques %}
+                            <option value="{{ marque }}">{{ marque }} [{{ total }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="filter-console-box">
+                        <label class="form-label small fw-bold mb-2" style="color: #4338ca;"><i class="bi bi-activity me-1"></i> Statut</label>
+                        <select name="etats" multiple class="form-select tech-select-multiple" size="5">
+                            {% for etat in etats %}
+                            <option value="{{ etat }}">{{ etat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="filter-console-box">
+                        <label class="form-label small fw-bold mb-2" style="color: #4338ca;"><i class="bi bi-door-open me-1"></i> Localisation</label>
+                        <select name="salles" multiple class="form-select tech-select-multiple" size="5">
+                            {% for salle, total in salles %}
+                            <option value="{{ salle }}">{{ salle }} [{{ total }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- COCKPIT COMPILATION & TRIGGERS (DROITE) -->
+        <div class="action-control-panel">
+            <div class="section-title">Paramètres de sortie</div>
+            
+            <div class="notice-card">
+                <div class="fw-bold small mb-1" style="color: #4338ca;">Ciblage multiple</div>
+                <p class="mb-0" style="font-size: 0.72rem; line-height: 1.4; color: #4f46e5;">
+                    Maintenez la commande <kbd style="background: #6366f1; padding: 1px 4px;">Ctrl / Cmd</kbd> pour combiner les filtres. 
+                    <span class="d-block mt-1 fw-bold" style="color: #4338ca;">Vide = Compilation intégrale de la base.</span>
+                </p>
+            </div>
+            
+            <div class="d-flex flex-column gap-2 my-1">
+                <div class="d-flex flex-column">
+                    <label for="date_debut" class="form-label fw-bold mb-1" style="font-size: 0.72rem; color: #6366f1;">
+                        <i class="bi bi-calendar-date me-1"></i> Date de début (Optionnel)
+                    </label>
+                    <input type="date" id="date_debut" name="date_debut" class="form-control tech-date-input">
+                </div>
+                
+                <div class="d-flex flex-column mt-1">
+                    <label for="date_fin" class="form-label fw-bold mb-1" style="font-size: 0.72rem; color: #6366f1;">
+                        <i class="bi bi-calendar-date me-1"></i> Date de fin (Optionnel)
+                    </label>
+                    <input type="date" id="date_fin" name="date_fin" class="form-control tech-date-input">
+                </div>
+            </div>
+
+            <!-- TRIGGERS UNIS SATURES ET INTENSES (AVEC GLOW AU SURVOL) -->
+            <div class="d-flex flex-column gap-2 mt-2">
+                <button type="submit" class="btn-action-tech btn-pdf">
+                    <i class="bi bi-file-earmark-pdf"></i> Compiler en Rapport PDF
+                </button>
+
+                <button type="submit" formaction="/export_excel" class="btn-action-tech btn-excel">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Exporter en Excel
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</form>
+<script>
+function getSelected(name) {
+    const select = document.querySelector(`select[name="${name}"]`);
+    return Array.from(select.selectedOptions).map(o => o.value);
+}
+
+function buildParams() {
+    const params = new URLSearchParams();
+    getSelected('lieux').forEach(v => params.append('lieux', v));
+    getSelected('salles').forEach(v => params.append('salles', v));
+    getSelected('categories').forEach(v => params.append('categories', v));
+    return params;
+}
+
+async function refreshSelect(endpoint, params, selectName, valueKey) {
+    const res = await fetch(`${endpoint}?${params.toString()}`);
+    const data = await res.json();
+    const select = document.querySelector(`select[name="${selectName}"]`);
+    select.innerHTML = '';
+    data.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item[valueKey];
+        opt.textContent = `${item[valueKey]} [${item.total}]`;
+        select.appendChild(opt);
+    });
+}
+
+async function refreshSalles() {
+    const params = new URLSearchParams();
+    getSelected('lieux').forEach(v => params.append('lieux', v));
+    await refreshSelect('/api/salles', params, 'salles', 'salle');
+}
+
+async function refreshCategories() {
+    await refreshSelect('/api/categorie', buildParams(), 'categories', 'categorie');
+}
+
+async function refreshMarques() {
+    await refreshSelect('/api/marque', buildParams(), 'marques', 'marque');
+}
+
+document.querySelector('select[name="lieux"]').addEventListener('change', async () => {
+    await refreshSalles();
+    await refreshCategories();
+    await refreshMarques();
+});
+
+document.querySelector('select[name="salles"]').addEventListener('change', async () => {
+    await refreshCategories();
+    await refreshMarques();
+});
+
+document.querySelector('select[name="categories"]').addEventListener('change', async () => {
+    await refreshMarques();
+});
+
+document.getElementById('recherche-lieu').addEventListener('input', function() {
+    const filtre = this.value.toLowerCase();
+    document.querySelectorAll('select[name="lieux"] option').forEach(opt => {
+        opt.style.display = opt.textContent.toLowerCase().includes(filtre) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

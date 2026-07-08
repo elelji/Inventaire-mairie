@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- COLONNE GAUCHE : Stats & Alertes -->
+    <div class="col-12 col-lg-4">
+        <div class="p-4 rounded-4 border shadow-sm mb-4" style="background: #ffffff;">
+            <h5 class="fw-bold mb-4">État Système</h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="p-3 bg-light rounded-3 border-start border-4 border-success">
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Succès</small>
+                    <div class="h2 fw-bold text-success">{{ logs|selectattr("succes", "equalto", true)|list|length }}</div>
+                </div>
+                <div class="p-3 bg-light rounded-3 border-start border-4 border-danger">
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Échecs</small>
+                    <div class="h2 fw-bold text-danger">{{ logs|selectattr("succes", "equalto", false)|list|length }}</div>
+                </div>
+            </div>
+        </div>
+        <!-- Petite carte informative en plus -->
+        <div class="p-4 rounded-4 border" style="background: var(--side-bg); color: white;">
+            <i class="bi bi-shield-check fs-2 mb-2"></i>
+            <h6 class="fw-bold">Audit de sécurité</h6>
+            <p class="small text-white-50">Dernière activité détectée il y a quelques instants. Le système est stable.</p>
+        </div>
+    </div>
+
+    <!-- COLONNE DROITE : Timeline Asymétrique -->
+    <div class="col-12 col-lg-8">
+        <div class="p-4 rounded-4 border bg-white shadow-sm">
+            <h5 class="fw-bold mb-4">Flux des accès</h5>
+            <div class="timeline-wrapper ps-2">
+                {% for log in logs %}
+                <div class="timeline-item d-flex gap-4 pb-4 position-relative">
+                    <div class="timeline-line"></div>
+                    <div class="node-badge {{ 'bg-success' if log.succes else 'bg-danger' }}">
+                        <i class="bi {{ 'bi-check' if log.succes else 'bi-x' }}"></i>
+                    </div>
+                    <div class="flex-grow-1 p-3 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">{{ log.email }}</span>
+                            <span class="font-monospace text-muted small">{{ log.date_action.strftime('%H:%M:%S') }}</span>
+                        </div>
+                        <div class="text-muted small mt-1"><i class="bi bi-hdd-network me-1"></i> {{ log.ip }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Timeline asymétrique */
+    .timeline-wrapper { position: relative; }
+    .timeline-line { position: absolute; left: 16px; top: 30px; bottom: 0; width: 2px; background: #e2e8f0; }
+    .node-badge { 
+        width: 32px; height: 32px; border-radius: 50%; 
+        display: flex; align-items: center; justify-content: center; 
+        color: white; z-index: 2; flex-shrink: 0;
+    }
+    .timeline-item:last-child .timeline-line { display: none; }
+    
+    /* Effets de bordure et ombres */
+    .border-start { border-width: 4px !important; }
+    .rounded-4 { border-radius: 24px !important; }
+</style>
+{% endblock %}

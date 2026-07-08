@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Corbeille — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec indicateur tech linéaire harmonisé */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--tech-primary);
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Conteneur de table style carte asymétrique */
+    .trash-card {
+        background: var(--tech-card-inner);
+        border: 2px solid var(--tech-border);
+        border-radius: 16px 4px;
+        box-shadow: var(--tech-shadow);
+        overflow: hidden;
+    }
+
+    /* Ajustement des boutons d'action de la table */
+    .btn-action-success {
+        background-color: #def7ec;
+        border: 1px solid #bdf2d5;
+        color: #03543f;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .btn-action-success:hover {
+        background-color: #03543f;
+        color: #ffffff;
+    }
+
+    .btn-action-danger {
+        background-color: #fde8e8;
+        border: 1px solid #f8b4b4;
+        color: #9b1c1c;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .btn-action-danger:hover {
+        background-color: #9b1c1c;
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+        <div class="section-title"><i class="bi bi-trash-fill"></i> Récupération</div>
+        <h1 class="h4 fw-bold m-0" style="color: var(--tech-text);">Corbeille des équipements</h1>
+    </div>
+    <a href="/equipement" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Retour à l'inventaire
+    </a>
+</div>
+
+{% if equipements %}
+<div class="trash-card">
+    <div class="table-responsive">
+        <table class="table table-hover m-0">
+            <thead>
+                <tr>
+                    <th class="ps-3">Nom</th>
+                    <th>Catégorie</th>
+                    <th>Lieu</th>
+                    <th>Salle</th>
+                    <th>N° série</th>
+                    <th>État</th>
+                    <th class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eq in equipements %}
+                <tr>
+                    <td class="fw-bold ps-3" style="color: var(--tech-text);">{{ eq.nom }}</td>
+                    <td><span class="text-muted">{{ eq.categorie }}</span></td>
+                    <td>{{ eq.lieu }}</td>
+                    <td><code class="text-dark small">{{ eq.salle }}</code></td>
+                    <td><span class="badge bg-light text-dark border">{{ eq.numero_serie }}</span></td>
+                    <td>
+                        <span class="badge 
+                            {% if eq.etat == 'fonctionnel' %}badge-etat-fonctionnel
+                            {% elif eq.etat == 'hors service' %}badge-etat-hs
+                            {% else %}badge-etat-reparation{% endif %}">
+                            {{ eq.etat }}
+                        </span>
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="d-inline-flex gap-2">
+                            <form method="post" action="/restaurer-equipements/{{ eq.numero_serie }}">
+                                <button type="submit" class="btn btn-action-success btn-sm py-1 px-2">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurer
+                                </button>
+                            </form>
+                            <form method="post" action="/supprimer_definitif/{{ eq.numero_serie }}">
+                                <button type="submit" class="btn btn-action-danger btn-sm py-1 px-2"
+                                        onclick="return confirm('Supprimer définitivement cet équipement ? Cette action est irréversible.')">
+                                    <i class="bi bi-trash me-1"></i>Supprimer définitivement
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="trash-card p-5 text-center">
+    <div class="mb-3 d-inline-flex align-items-center justify-content-center" 
+         style="width: 64px; height: 64px; background-color: var(--tech-bg); border: 2px solid var(--tech-border); border-radius: 16px; color: var(--tech-muted);">
+        <i class="bi bi-trash3 fs-3"></i>
+    </div>
+    <h2 class="h5 fw-bold" style="color: var(--tech-text);">La corbeille est vide</h2>
+    <p class="text-muted small m-0">Aucun équipement supprimé n'est actuellement en attente de traitement.</p>
+</div>
+{% endif %}
+{% endblock %}

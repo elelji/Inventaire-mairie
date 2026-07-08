@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Vérification 2FA — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Structure identique à la page Login */
+    .auth-page-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 0 20px;
+    }
+
+    .verify-card {
+        background: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    /* Icône de sécurité stylisée */
+    .icon-box {
+        width: 56px;
+        height: 56px;
+        background-color: #f5f3ff;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 12px;
+        color: #6366f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    /* Style du code */
+    .code-input {
+        letter-spacing: 0.5em;
+        font-weight: 700;
+        font-size: 1.5rem;
+        text-align: center;
+        padding: 0.75rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+    }
+
+    .code-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-verify {
+        background: #6366f1;
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 6px;
+    }
+
+    .btn-verify:hover { background: #4f46e5; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    
+    <div class="verify-card">
+        <!-- Icône et Titre -->
+        <div class="text-center">
+            <div class="icon-box">
+                <i class="bi bi-shield-check fs-3"></i>
+            </div>
+            <h2 class="h5 fw-bold mb-2">Vérification 2FA</h2>
+            <p class="text-muted small mb-4">Un code de sécurité à 6 chiffres a été envoyé à votre adresse email.</p>
+        </div>
+
+        {% if erreur %}
+        <div class="alert alert-danger small py-2 mb-4">{{ erreur }}</div>
+        {% endif %}
+
+        <form method="post" action="/verify-2fa">
+            <div class="mb-4">
+                <input type="text" name="code" class="form-control code-input" 
+                       placeholder="000000" maxlength="6" 
+                       autocomplete="one-time-code" autofocus required>
+            </div>
+            
+            <button type="submit" class="btn btn-verify w-100">
+                <i class="bi bi-check2-circle me-1"></i> Valider l'accès
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="/login" class="text-decoration-none small" style="color: #6366f1;">
+                <i class="bi bi-arrow-left me-1"></i> Retour à la connexion
+            </a>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

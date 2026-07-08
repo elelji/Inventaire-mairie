@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+venv/
+*.xlsx
+*.db
+*.sqlite
+notes.md
+prompt.md

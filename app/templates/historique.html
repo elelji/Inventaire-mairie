@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Traçabilité Système — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Architecture Asymétrique */
+    .histo-grid { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; align-items: start; }
+
+    /* Timeline Verticale (Fil d'Ariane Tech) */
+    .timeline-container { position: relative; padding-left: 2rem; }
+    .timeline-container::before { 
+        content: ''; position: absolute; left: 6px; top: 0; bottom: 0; 
+        width: 2px; background: linear-gradient(to bottom, var(--tech-border), transparent); 
+    }
+
+    /* Carte d'événement (Style robuste) */
+    .event-node {
+        position: relative; 
+        background: #ffffff;
+        border: 2px solid var(--tech-border); /* Bordure renforcée */
+        border-radius: 12px 2px 12px 2px; 
+        padding: 1.5rem; 
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+    .event-node:hover { 
+        border-color: var(--topbar-bg); 
+        transform: translateX(4px); 
+    }
+
+    /* Dot de la timeline */
+    .node-dot {
+        position: absolute; left: -2.3rem; top: 1.8rem; width: 14px; height: 14px;
+        background: #fff; border: 3px solid var(--topbar-bg); border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(67, 56, 192, 0.1);
+    }
+
+    /* Badge Action Typé */
+    .action-badge {
+        font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+        padding: 0.3rem 0.6rem; border-radius: 4px;
+    }
+
+    /* Panneau Meta Style Cockpit (Aligné sur Garanties) */
+    .meta-panel {
+        background: #ffffff;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px 4px;
+        padding: 1.5rem;
+        position: sticky;
+        top: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .data-line {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px dashed var(--tech-border);
+    }
+
+    .data-value { font-family: 'SFMono-Regular', Consolas, monospace; font-weight: 700; color: #1e1b4b; }
+
+    .tech-btn {
+        border-radius: 6px !important;
+        font-size: 0.75rem !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        border: 2px solid var(--tech-border) !important;
+    }
+    
+    .panel-header {
+        font-weight: 700;
+        color: #1e1b4b;
+        border-bottom: 2px solid var(--tech-border);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="section-title"><i class="bi bi-cpu-fill"></i> LOG_SYSTÈME</div>
+    <h1 class="h3 fw-bold m-0" style="color: #1e1b4b;">Historique des Opérations</h1>
+</div>
+
+<div class="histo-grid">
+    <div class="timeline-container">
+        {% for histo, equipement in equipement_histo %}
+        <div class="event-node">
+            <div class="node-dot"></div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="action-badge 
+                    {% if histo.action == 'Ajout' %}bg-success-subtle text-success{% elif histo.action == 'Suppression' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                    {{ histo.action }}
+                </span>
+                <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock me-1"></i>{{ histo.date_action }}</span>
+            </div>
+            
+            <h5 class="fw-bold m-0" style="color: #1e1b4b;">{{ histo.nom_equipement }}</h5>
+            <div class="mt-2 pt-2 border-top d-flex gap-3" style="font-size: 0.8rem; border-color: var(--tech-border) !important;">
+                <span class="text-secondary"><i class="bi bi-geo-alt me-1"></i>{{ equipement.lieu if equipement else 'Hors Parc' }}</span>
+                <span class="text-secondary"><i class="bi bi-person me-1"></i>{{ equipement.usager if equipement else 'N/A' }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted border border-2 border-dashed rounded">Aucun log système trouvé.</div>
+        {% endfor %}
+    </div>
+
+    <div class="meta-panel">
+        <div class="panel-header">
+            <span class="d-flex align-items-center">
+                <i class="bi bi-terminal-fill me-2" style="color: var(--topbar-bg);"></i>STATS_SYSTÈME
+            </span>
+            <span class="live-dot" title="Actif"></span>
+        </div>
+
+        <div class="data-line">
+            <span class="text-muted small">Total journaux</span>
+            <span class="data-value">{{ equipement_histo|length }}</span>
+        </div>
+        <div class="mt-4 d-grid gap-2">
+            <a href="/equipement" class="btn btn-primary tech-btn" style="background: var(--topbar-bg);">
+                <i class="bi bi-search me-2"></i>Liste des Équipements
+            </a>
+            <a href="/" class="btn btn-outline-secondary tech-btn">
+                <i class="bi bi-arrow-left me-2"></i>Dashboard
+            </a>
+        </div>
+
+        <div class="mt-4 pt-3 border-top border-dashed">
+        </div>
+    </div>
+</div>
+{% endblock %}

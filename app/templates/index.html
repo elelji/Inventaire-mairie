@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec ligne tech violette */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #4338ca !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border, #e2e8f0), transparent);
+    }
+
+    /* --- ARCHITECTURE DE LA GRILLE COCKPIT --- */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 8fr 4fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+        .dashboard-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Panneaux latéraux Premium */
+    .tech-panel {
+        background: #ffffff !important;
+        border: 1px solid rgba(67, 56, 192, 0.15) !important;
+        border-radius: 16px 4px;
+        box-shadow: 0 4px 20px -2px rgba(49, 46, 129, 0.03);
+        padding: 1.4rem;
+        height: 100%;
+        transition: all 0.2s ease;
+    }
+    .tech-panel .panel-header {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1e1b4b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px dashed rgba(67, 56, 192, 0.15);
+        padding-bottom: 0.5rem;
+    }
+
+    /* --- EFFET GLOW ET PROFONDEUR SUR LES ANNEAUX --- */
+    .status-ring-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid rgba(67, 56, 192, 0.2);
+        border-radius: 20px;
+        padding: 1.8rem;
+        box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.05), 
+                    0 0 0 1px rgba(67, 56, 192, 0.02);
+    }
+    @media (max-width: 576px) {
+        .status-ring-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+    }
+    
+    .status-ring-item {
+        text-align: center;
+        flex: 1;
+        transition: transform 0.2s ease;
+    }
+    .status-ring-item:hover {
+        transform: scale(1.03);
+    }
+
+    .status-ring-circle {
+        position: relative;
+        width: 85px;
+        height: 85px;
+        margin: 0 auto 0.6rem auto;
+    }
+    .status-ring-circle svg {
+        transform: rotate(-90deg);
+    }
+    .status-ring-value {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+    .status-ring-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    /* Effets de lueur colorée (Glow) sous les chiffres clés */
+    .ring-indigo .status-ring-value { color: #4338ca; text-shadow: 0 0 15px rgba(67, 56, 192, 0.2); }
+    .ring-green .status-ring-value { color: #10b981; text-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+    .ring-red .status-ring-value { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+    .ring-orange .status-ring-value { color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+
+    /* --- AMÉLIORATION DES TUILES DE CATÉGORIES --- */
+    .cat-tile {
+        background: #ffffff;
+        border: 1px solid rgba(67, 56, 192, 0.12);
+        border-radius: 14px;
+        padding: 1.4rem 1.2rem;
+        text-decoration: none;
+        display: block;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+    .cat-tile:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -5px rgba(49, 46, 129, 0.08);
+    }
+
+    /* Mini pastille de catégorie épurée */
+    .mini-cat-box {
+        background: #ffffff; 
+        border: 1px solid rgba(0, 0, 0, 0.08) !important; 
+        border-radius: 8px 2px !important;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+    }
+    .mini-cat-box:hover {
+        border-color: #6366f1 !important; 
+        background-color: #f8fafc !important;
+        transform: translateY(-1px);
+    }
+
+    /* --- BANDES DE DONNÉES STYLE SCANNER (STRIPS) --- */
+    .strip-item {
+        background: #f8fafc;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 8px 2px;
+        padding: 0.7rem 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    .strip-item:hover {
+        background: #ffffff;
+        transform: translateX(4px);
+        border-left-color: #6366f1 !important;
+        border-top-color: rgba(99, 102, 241, 0.2) !important;
+        border-right-color: rgba(99, 102, 241, 0.2) !important;
+        border-bottom-color: rgba(99, 102, 241, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(49, 46, 129, 0.04);
+    }
+    .strip-icon {
+        width: 32px; height: 32px; background: #e0e7ff; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center; color: #4338ca; flex-shrink: 0;
+    }
+
+    .status-bar-vertical { width: 4px; height: 32px; border-radius: 2px; flex-shrink: 0; }
+    .status-bar-vertical.expire { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+    .status-bar-vertical.bientot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .status-bar-vertical.ok { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+    .tag-mini { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
+    .tag-mini.expire { background: #fde8e8; color: #9b1c1c; }
+    .tag-mini.bientot { background: #fef3c7; color: #92400e; }
+    .tag-mini.ok { background: #def7ec; color: #03543f; }
+
+    /* Micro-pastille animée Live pour l'effet centre opérationnel */
+    .live-dot {
+        width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;
+        display: inline-block; position: relative; margin-left: 4px; bottom: 1px;
+    }
+    .live-dot::after {
+        content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+        background: inherit; border-radius: 50%; animation: pulse-dot 1.8s infinite ease-in-out;
+    }
+    @keyframes pulse-dot {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(3); opacity: 0; }
+    }
+    .consumable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    }
+    .consumable-card {
+        background: #fff;
+        border: 1px solid rgba(67, 56, 192, 0.1);
+        padding: 1rem;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    .consumable-card .progress { height: 4px; border-radius: 2px; margin-top: 8px; }
+    /* Badge de statut */
+    .bg-status-green { background-color: #10b981; }
+    .bg-status-yellow { background-color: #f59e0b; }
+    .bg-status-red { background-color: #ef4444; }
+
+    /* Bordure de la carte pour renforcer l'alerte */
+    .status-green { border-left: 4px solid #10b981; }
+    .status-yellow { border-left: 4px solid #f59e0b; }
+    .status-red { border-left: 4px solid #ef4444; }
+
+    .consumable-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #e2e8f0; /* Base neutre */
+        padding: 1rem;
+        border-radius: 2px 12px 12px 2px;
+        transition: all 0.2s ease;
+    }
+    .consumable-card:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .card-val { font-size: 1.25rem; font-weight: 800; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+
+    <div class="d-flex flex-column gap-4">
+        
+        <div>
+            <div class="section-title"><i class="bi bi-eye-fill"></i> Vision Centralisée</div>
+            <div class="status-ring-wrapper">
+                <div class="status-ring-item ring-indigo">
+                    <div class="status-ring-circle">
+                        <svg width="85" height="85" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" stroke-width="7"/>
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#4338ca" stroke-width="7" stroke-dasharray="263.8" stroke-dashoffset="0"/>
+                        </svg>
+                        <div class="status-ring-value">{{ total if total is not none else 0 }}</div>
+                    </div>
+                    <div class="status-ring-label">Total</div>
+                </div>
+                <div class="status-ring-item ring-green">
+                    <div class="status-ring-circle">
+                        <svg width="85" height="85" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" stroke-width="7"/>
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="7" stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (fonctionnels / (total if total and total > 0 else 1)))|round(1) }}"/>
+                        </svg>
+                        <div class="status-ring-value">{{ fonctionnels if fonctionnels is not none else 0 }}</div>
+                    </div>
+                    <div class="status-ring-label">En ligne <span class="live-dot" title="Activité en direct"></span></div>
+                </div>
+                <div class="status-ring-item ring-red">
+                    <div class="status-ring-circle">
+                        <svg width="85" height="85" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" stroke-width="7"/>
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#ef4444" stroke-width="7" stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (hors_service / (total if total and total > 0 else 1)))|round(1) }}"/>
+                        </svg>
+                        <div class="status-ring-value">{{ hors_service if hors_service is not none else 0 }}</div>
+                    </div>
+                    <div class="status-ring-label">Hors Svc</div>
+                </div>
+                <div class="status-ring-item ring-orange">
+                    <div class="status-ring-circle">
+                        <svg width="85" height="85" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" stroke-width="7"/>
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" stroke-width="7" stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (en_reparation / (total if total and total > 0 else 1)))|round(1) }}"/>
+                        </svg>
+                        <div class="status-ring-value">{{ en_reparation if en_reparation is not none else 0 }}</div>
+                    </div>
+                    <div class="status-ring-label">Atelier</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title"><i class="bi bi-grid-fill"></i> Répartition des Volumes</div>
+            <div class="row g-3 mb-3">
+                {% for cat in categories %}
+                {% if cat[1] and cat[1] > 10 %}
+                <div class="col-12 col-sm-6">
+                    <a href="/equipement?categorie={{ cat[0] }}" class="cat-tile" style="background: linear-gradient(135deg, hsl({{ (loop.index * 55) % 360 }}, 70%, 97%) 0%, #ffffff 100%); border-color: hsl({{ (loop.index * 55) % 360 }}, 50%, 88%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="fw-bold" style="color: hsl({{ (loop.index * 55) % 360 }}, 75%, 20%); font-size: 0.95rem;">{{ cat[0] }}</div>
+                            <div class="fs-3 fw-bold" style="color: hsl({{ (loop.index * 55) % 360 }}, 75%, 22%); font-weight: 800;">{{ cat[1] }}</div>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="row g-2 mb-4">
+                {% for cat in categories %}
+                {% if cat[1] and cat[1] <= 10 %}
+                <div class="col-6 col-sm-4">
+                    <a href="/equipement?categorie={{ cat[0] }}" class="text-decoration-none d-block">
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border mini-cat-box">
+                            <span class="fw-semibold text-truncate me-1" style="color: #1e1b4b; font-size: 0.8rem;">{{ cat[0] }}</span>
+                            <span class="badge rounded-pill px-2 py-1" style="background: rgba(99, 102, 241, 0.08); color: #4338ca; font-weight: 700; font-size: 0.72rem;">{{ cat[1] }}</span>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="section-title mb-0"><i class="bi bi-droplet-fill"></i> Suivi des Consommables</div>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAjoutConsommable">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+            <div class="consumable-grid">
+                {% for c in consommables %}
+                {% set pct = pourcentage_restant_consommable(c) %}
+                {% set status_label = statut_consommable(c) %}
+                {% if status_label == "OK" %}
+                    {% set color_class = "green" %}
+                {% elif status_label == "Bientôt épuisé" %}
+                    {% set color_class = "yellow" %}
+                {% else %}
+                    {% set color_class = "red" %}
+                {% endif %}
+                
+                <div class="consumable-card status-{{ color_class }}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold text-dark">{{ c.type_consommable }}</div>
+                        <span class="badge bg-status-{{ color_class }} text-white">{{ status_label }}</span>
+                    </div>
+                    
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-geo-alt"></i> {{ c.equipement.nom if c.equipement else c.lieu }}
+                    </div>
+                    
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-status-{{ color_class }}" style="width: {{ pct }}%;"></div>
+                    </div>
+                    
+                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                        Installé le : {{ c.date_installation.strftime('%d/%m/%Y') }}
+                    </div>
+
+                    {% if status_label == 'A remplacer' %}
+                    <form method="post" action="/consommables/{{ c.id }}/remplacer" class="mt-2">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remplacer</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column gap-3">
+        <div class="tech-panel">
+            <div class="panel-header">
+                <span><i class="bi bi-shield-exclamation me-1" style="color: #4338ca;"></i>Garanties prioritaires</span>
+                <a href="/garanties" class="btn btn-sm btn-light py-0 px-2" style="font-size: 0.7rem; color: #4338ca; border: 1px solid rgba(0,0,0,0.05);">Voir tout</a>
+            </div>
+            <div class="d-flex flex-column">
+                {% for item in garanties_dashboard %}
+                <a href="/garanties" class="strip-item">
+                    <div class="status-bar-vertical {{ item.statut if item.statut != 'expiré' else 'expire' }} {{ 'bientot' if item.statut == 'bientôt' else '' }}"></div>
+                    <div class="text-truncate flex-grow-1">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.82rem;">{{ item.garantie.equipement.lieu if item.garantie.equipement.lieu else 'Lieu non spécifié' }}</div>
+                        <div class="text-muted text-truncate" style="font-size: 0.72rem;">{{ item.garantie.equipement.salle if item.garantie.equipement.salle else '-' }}</div>
+                    </div>
+                    <span class="tag-mini {{ item.statut if item.statut != 'expiré' else 'expire' }} {{ 'bientot' if item.statut == 'bientôt' else '' }}">
+                        {% if item.statut == 'expiré' %}⚠ Expiré{% elif item.statut == 'bientôt' %}⏳ Bientôt{% else %}✓ OK{% endif %}
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tech-panel">
+            <div class="panel-header"><span><i class="bi bi-calendar-check me-1" style="color: #4338ca;"></i>Installations de l'année</span></div>
+            {% for inst in installations_annee %}
+            <div class="d-flex align-items-center justify-content-between p-2 border border-dashed rounded bg-white" style="border-color: rgba(67, 56, 192, 0.2) !important;">
+                <div class="text-start">
+                    <div class="fw-bold text-dark" style="font-size: 0.8rem;">{{ inst[0] }}</div>
+                    <div class="text-muted" style="font-size: 0.7rem;">Équipements intégrés</div>
+                </div>
+                <svg width="40" height="40" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#4338ca" stroke-width="12" stroke-dasharray="251.3" stroke-dashoffset="{{ 251.3 - (251.3 * (pct_annee_ecoule if pct_annee_ecoule is not none else 1))|round(1) }}" transform="rotate(-90 50 50)"/>
+                    <text cx="50" cy="50" x="50" y="58" text-anchor="middle" font-size="26" font-weight="800" fill="#1e1b4b">{{ inst[1] }}</text>
+                </svg>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="tech-panel">
+            <div class="panel-header">
+                <span><i class="bi bi-clock-history me-1" style="color: #4338ca;"></i>Dernières Entrées</span>
+                <a href="/equipement" class="btn btn-sm btn-light py-0 px-2" style="font-size: 0.7rem; color: #4338ca; border: 1px solid rgba(0,0,0,0.05);">Index</a>
+            </div>
+            <div class="d-flex flex-column">
+                {% for eq in derniers %}
+                <div class="strip-item" onclick="window.location='/equipement/{{ eq.numero_serie }}'">
+                    <div class="strip-icon"><i class="bi bi-pc-display" style="font-size: 0.8rem;"></i></div>
+                    <div class="text-truncate flex-grow-1">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.8rem;">{{ eq.nom }}</div>
+                        <div class="text-muted text-truncate" style="font-size: 0.72rem;">{{ eq.lieu if eq.lieu else 'Lieu non spécifié' }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAjoutConsommable" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="/consommables" class="modal-content p-3">
+            <div class="modal-header border-0"><h5>Ajouter un consommable</h5></div>
+            <div class="modal-body">
+                <input type="text" name="type_consommable" class="form-control mb-2" placeholder="Type de consommable" required>
+                <div class="input-group mb-2">
+                    <input type="text" id="numero_serie_recherche" class="form-control" placeholder="N° Série">
+                    <button type="button" id="btn_rechercher_equipement" class="btn btn-outline-secondary">Recherche</button>
+                </div>
+                <div id="resultat_recherche_equipement" class="small text-muted mb-2"></div>
+                <input type="hidden" name="equipement_id" id="equipement_id">
+               <div id="champs_lieu_salle" class="row g-2">
+                    <div class="col-6">
+                        <select name="lieu" id="lieu" class="form-select">
+                            <option value="">-- Choisir un lieu --</option>
+                            {% for l in lieux %}
+                            <option value="{{ l.nom }}">{{ l.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="salle" id="salle" class="form-select">
+                            <option value="">-- Choisir une salle --</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="date" name="date_installation" class="form-control mb-2" required>
+                <input type="number" name="duree_estimee_mois" class="form-control mb-2" placeholder="Durée de vie estimée (mois)" min="1" required>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-primary" style="background:#4338ca;">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lieuSelect = document.getElementById('lieu');
+    const salleSelect = document.getElementById('salle');
+    const btnRechercher = document.getElementById('btn_rechercher_equipement');
+
+    async function remplirSalles(lieu) {
+        salleSelect.innerHTML = '<option value="">-- Choisir une salle --</option>';
+        if (!lieu) return;
+        const res = await fetch(`/api/salles?lieux=${encodeURIComponent(lieu)}`);
+        const data = await res.json();
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.salle;
+            option.textContent = item.salle;
+            salleSelect.appendChild(option);
+        });
+    }
+
+    lieuSelect.addEventListener('change', function() {
+        remplirSalles(this.value);
+    });
+
+    if (btnRechercher) {
+        btnRechercher.addEventListener('click', async function() {
+            const num = document.getElementById('numero_serie_recherche').value;
+            const res = await fetch(`/api/equipement?numero_serie=${encodeURIComponent(num)}`);
+            const data = await res.json();
+            const divRes = document.getElementById('resultat_recherche_equipement');
+            if (data.length > 0) {
+                document.getElementById('equipement_id').value = data[0].id;
+
+                lieuSelect.value = data[0].lieu;
+                await remplirSalles(data[0].lieu);
+                salleSelect.value = data[0].salle;
+
+                lieuSelect.disabled = true;
+                salleSelect.disabled = true;
+                divRes.textContent = "Équipement trouvé !";
+            } else {
+                document.getElementById('equipement_id').value = "";
+                lieuSelect.disabled = false;
+                salleSelect.disabled = false;
+                divRes.textContent = "Non trouvé.";
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

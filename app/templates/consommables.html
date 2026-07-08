@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Suivi des consommables</h1>
+
+    <table class="table table-bordered table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Équipement / Lieu</th>
+                <th>Date d'installation</th>
+                <th>Date de fin estimée</th>
+                <th>Jours restants</th>
+                <th>Progression</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in consommables %}
+            {% set pourcentage = pourcentage_restant_consommable(c) %}
+            {% set statut = statut_consommable(c) %}
+            <tr>
+                <td>{{ c.type_consommable }}</td>
+                <td>
+                    {% if c.equipement %}
+                        {{ c.equipement.nom }} ({{ c.equipement.lieu }} - {{ c.equipement.salle }})
+                    {% else %}
+                        {{ c.lieu }} - {{ c.salle }}
+                    {% endif %}
+                </td>
+                <td>{{ c.date_installation }}</td>
+                <td>{{ date_fin_estimee_consommable(c) }}</td>
+                <td>{{ jours_restants_consommable(c) }} jours</td>
+                <td style="min-width: 150px;">
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar
+                            {% if statut == 'OK' %}bg-success
+                            {% elif statut == 'Bientôt épuisé' %}bg-warning
+                            {% else %}bg-danger
+                            {% endif %}"
+                            role="progressbar"
+                            style="width: {{ pourcentage }}%;"
+                            aria-valuenow="{{ pourcentage }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                            {{ pourcentage | round(1) }}%
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge
+                        {% if statut == 'OK' %}bg-success
+                        {% elif statut == 'Bientôt épuisé' %}bg-warning
+                        {% else %}bg-danger
+                        {% endif %}">
+                        {{ statut }}
+                    </span>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">Aucun consommable enregistré.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

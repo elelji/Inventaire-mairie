@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}{% if equipement %}Modifier{% else %}Ajouter{% endif %} un équipement — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec ligne tech violette harmonisée */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Panneau de formulaire Cockpit */
+    .tech-form-panel {
+        background: #ffffff;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Inputs et Selects calibrés */
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .tech-input, .tech-select, .tech-textarea {
+        font-size: 0.85rem !important;
+        border: 1px solid var(--tech-border) !important;
+        border-radius: 8px 2px !important;
+        color: #1e1b4b !important;
+        padding: 0.5rem 0.75rem !important;
+        transition: all 0.15s ease;
+    }
+
+    .tech-input:focus, .tech-select:focus, .tech-textarea:focus {
+        border-color: var(--accent-light) !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        outline: none !important;
+    }
+
+    /* Boutons personnalisés */
+    .btn-tech-primary {
+        background-color: #4338ca !important;
+        border-color: #4338ca !important;
+        color: #ffffff !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px 2px;
+        transition: all 0.15s ease;
+    }
+    .btn-tech-primary:hover {
+        background-color: #312e81 !important;
+        border-color: #312e81 !important;
+    }
+
+    .btn-tech-secondary {
+        background-color: #ffffff !important;
+        border: 1px solid var(--tech-border) !important;
+        color: #4b5563 !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px 2px;
+    }
+    .btn-tech-secondary:hover {
+        background-color: #f8fafc !important;
+        border-color: var(--tech-border) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="/equipement" class="text-muted small text-decoration-none d-inline-flex align-items-center gap-1">
+        <i class="bi bi-arrow-left"></i> Retour au registre
+    </a>
+    <div class="section-title mt-3"><i class="bi bi-sliders"></i> Configuration matériel</div>
+    <h1 class="h4 mb-0 fw-bold text-dark">
+        {% if equipement %}Modifier — {{ equipement.nom }}{% else %}Ajouter un équipement{% endif %}
+    </h1>
+</div>
+
+<div class="card tech-form-panel">
+    <div class="card-body p-0">
+        <form method="post" action="{% if equipement %}/change_equipement/{{ equipement.numero_serie }}{% else %}/create_equipement{% endif %}">
+            {% if equipement %}
+            <input type="hidden" name="_method" value="PUT">
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nom de l'équipement *</label>
+                    <input type="text" name="nom" class="form-control tech-input" value="{{ equipement.nom if equipement else '' }}" required placeholder="Ex: PC-PORT-042">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Catégorie</label>
+                    <div class="d-flex gap-2">
+                        <select name="categorie" class="form-select tech-select" id="select-categorie">
+                            <option value="">-- Choisir une catégorie --</option>
+                            {% for cat in categories %}
+                            {% if cat is not none %}
+                            <option value="{{ cat }}" {% if equipement and equipement.categorie == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn btn-tech-secondary p-2 d-flex align-items-center justify-content-center" onclick="toggleNouvelleCategorie()" title="Créer une nouvelle catégorie">
+                            <i class="bi bi-plus-lg" style="color: #4338ca;"></i>
+                        </button>
+                    </div>
+                    <input type="text" name="nouvelle_categorie" id="nouvelle-categorie" class="form-control tech-input mt-2" placeholder="Saisir la nouvelle catégorie..." style="display:none;">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Marque</label>
+                    <input type="text" name="marque" class="form-control tech-input" value="{{ equipement.marque if equipement else '' }}" placeholder="Ex: Dell, HP, Apple...">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Modèle</label>
+                    <input type="text" name="modele" class="form-control tech-input" value="{{ equipement.modele if equipement else '' }}" placeholder="Ex: Latitude 5420">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">N° de série (S/N)</label>
+                    <input type="text" name="numero_serie" class="form-control tech-input" value="{{ equipement.numero_serie if equipement else '' }}" placeholder="Ex: CN-0XG21X-...">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Date d'installation</label>
+                    <input type="date" name="date_installation" class="form-control tech-input" value="{{ equipement.date_installation if equipement else '' }}">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Lieu / Établissement</label>
+                    <select name="lieu" class="form-select tech-select">
+                        <option value="">-- Sélectionner un lieu --</option>
+                        {% for l in lieux %}
+                        {% if l is not none %}
+                        <option value="{{ l }}" {% if equipement and equipement.lieu == l %}selected{% endif %}>{{ l }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Salle / Bureau</label>
+                    <input type="text" name="salle" class="form-control tech-input" value="{{ equipement.salle if equipement else '' }}" placeholder="Ex: Salle 102, B04...">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Usager / Affectation</label>
+                    <input type="text" name="usager" class="form-control tech-input" value="{{ equipement.usager if equipement else '' }}" placeholder="Nom de l'utilisateur...">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">État</label>
+                    <select name="etat" class="form-select tech-select">
+                        <option value="fonctionnel" {% if equipement and equipement.etat == 'fonctionnel' %}selected{% endif %}>Fonctionnel</option>
+                        <option value="hors service" {% if equipement and equipement.etat == 'hors service' %}selected{% endif %}>Hors service</option>
+                        <option value="en réparation" {% if equipement and equipement.etat == 'en réparation' %}selected{% endif %}>En réparation</option>
+                    </select>
+                </div>
+                
+                <div class="col-12">
+                    <label class="form-label">Commentaire</label>
+                    <textarea name="commentaire" class="form-control tech-textarea" rows="3" placeholder="Informations complémentaires, configuration spécifique..."></textarea>
+                </div>
+                
+                <div class="col-12 d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-tech-primary">
+                        <i class="bi bi-check-circle me-1"></i>{% if equipement %}Enregistrer les modifications{% else %}Ajouter au parc{% endif %}
+                    </button>
+                    <a href="/equipement" class="btn btn-tech-secondary">Annuler</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleNouvelleCategorie() {
+    const input = document.getElementById('nouvelle-categorie');
+    const select = document.getElementById('select-categorie');
+    if (input.style.display === 'none') {
+        input.style.display = 'block';
+        input.focus();
+        select.value = '';
+        select.name = ''; 
+    } else {
+        input.style.display = 'none';
+        input.value = '';
+        select.name = 'categorie';
+    }
+}
+</script>
+{% endblock %}

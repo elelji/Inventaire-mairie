@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Sites — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre harmonisée */
+    .section-title {
+        font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important; margin-bottom: 1.2rem;
+        display: flex; align-items: center; gap: 0.5rem; font-weight: 700;
+    }
+    .section-title::after {
+        content: ''; flex: 1; height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    .sites-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+        gap: 1.5rem; 
+    }
+
+    .site-card {
+        background: #ffffff;
+        border: 2px solid var(--tech-border);
+        border-radius: 16px 4px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .site-card:hover { 
+        border-color: var(--topbar-bg); 
+        box-shadow: 0 10px 15px -3px rgba(49, 46, 129, 0.1); 
+    }
+
+    .load-stat {
+        font-size: 2.5rem; font-weight: 800; color: #1e1b4b;
+        margin: 0.5rem 0; line-height: 1; font-family: monospace;
+    }
+    .load-label { 
+        font-size: 0.65rem; text-transform: uppercase; 
+        letter-spacing: 0.1em; color: #64748b; font-weight: 700;
+    }
+
+    .input-edit { 
+        border: 2px solid var(--tech-border); border-radius: 6px; 
+        padding: 0.5rem; width: 100%; font-weight: 600; font-size: 0.9rem;
+        background: #f8fafc;
+    }
+    
+    .btn-indigo { 
+        background: var(--topbar-bg); color: white; 
+        font-weight: 700; font-size: 0.75rem; border-radius: 6px;
+        text-transform: uppercase;
+    }
+    .btn-red { 
+        background: #fde8e8; color: #9b1c1c; border: 2px solid #f8b4b4; 
+        font-weight: 700; font-size: 0.75rem; border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-5">
+    <div class="section-title"><i class="bi bi-diagram-3-fill"></i> RÉGISTRE_LOGISTIQUE</div>
+    <h1 class="h3 fw-bold m-0" style="color: #1e1b4b;">Gestion des Établissements</h1>
+</div>
+
+<div class="sites-grid">
+    {% for item in lieux %}
+    <div class="site-card">
+        <form method="post" action="/admin/lieux/renommer/{{ item.lieu.id }}">
+            <input type="text" name="nouveau_nom" value="{{ item.lieu.nom }}" class="input-edit mb-3">
+            
+            <div class="text-center my-3 p-3 bg-light rounded-3 border border-dashed">
+                <div class="load-stat">{{ item.total }}</div>
+                <div class="load-label">Équipements en parc</div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-indigo flex-grow-1">MODIFIER</button>
+                <button type="button" class="btn btn-red"
+                    data-bs-toggle="modal" data-bs-target="#modalSuppression"
+                    onclick="prepareSuppression('{{ item.lieu.id }}', '{{ item.lieu.nom }}')">
+                    <i class="bi bi-trash3-fill"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endfor %}
+
+    <div class="site-card d-flex flex-column justify-content-center align-items-center" style="border: 2px dashed var(--tech-border); background: #fcfcfc;">
+        <form method="post" action="/admin/lieux/ajouter" class="text-center w-100">
+            <i class="bi bi-plus-circle-fill text-muted" style="font-size: 2.5rem;"></i>
+            <input type="text" name="nom" class="input-edit mt-3 text-center" placeholder="Nom du nouveau site..." required>
+            <button type="submit" class="btn btn-indigo w-100 mt-3">CRÉER LE SITE</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

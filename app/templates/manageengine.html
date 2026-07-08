@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}ManageEngine — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec indicateur tech linéaire harmonisé */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--tech-primary);
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Refonte des cartes de configuration (style clair asymétrique) */
+    .me-card {
+        background: var(--tech-card-inner);
+        border: 2px solid var(--tech-border);
+        border-radius: 16px 4px;
+        padding: 2rem;
+        box-shadow: var(--tech-shadow);
+        height: 100%;
+    }
+
+    .me-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px dashed var(--tech-border);
+    }
+
+    /* Badge d'icône adouci */
+    .me-icon {
+        width: 52px; height: 52px;
+        background: var(--tech-card);
+        border: 1px solid var(--tech-border);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        color: var(--tech-primary);
+        flex-shrink: 0;
+    }
+
+    .me-icon-title { color: var(--tech-text); font-weight: 700; font-size: 1.1rem; }
+    .me-icon-sub { color: var(--tech-muted); font-size: 0.82rem; }
+
+    .form-label { color: var(--tech-text); font-weight: 600; font-size: 0.88rem; }
+    .form-text { color: var(--tech-muted); font-size: 0.78rem; }
+
+    /* Info boxes de droite version épurée */
+    .info-box {
+        background: rgba(208, 228, 247, 0.25);
+        border: 1px solid var(--tech-border);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-top: 1.2rem;
+    }
+    .info-box .info-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--tech-primary);
+        font-weight: 700;
+        margin-bottom: 0.6rem;
+    }
+    .info-box ul {
+        margin: 0; padding-left: 1.2rem;
+        color: var(--tech-text);
+        font-size: 0.82rem;
+        line-height: 1.7;
+    }
+    .info-box li::marker {
+        color: var(--tech-accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="section-title"><i class="bi bi-plugin"></i> Intégrations</div>
+    <h1 class="h4 fw-bold" style="color: var(--tech-text);">Connexion ManageEngine</h1>
+    <p class="text-muted small">Synchronisez les actifs découverts sur le réseau de manière automatisée.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="me-card">
+            <div class="me-header">
+                <div class="me-icon"><i class="bi bi-hdd-network"></i></div>
+                <div>
+                    <div class="me-icon-title">ManageEngine Asset Explorer</div>
+                    <div class="me-icon-sub">Passerelle de synchronisation des assets</div>
+                </div>
+            </div>
+
+            {% if succes %}
+            <div class="alert badge-etat-fonctionnel d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>
+                    Connexion réussie — <strong>{{ nb_assets }} assets</strong> détectés dans ManageEngine.
+                </div>
+            </div>
+            {% endif %}
+
+            {% if erreur %}
+            <div class="alert badge-etat-hs d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div>
+                    {{ erreur }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="section-title"><i class="bi bi-key-fill"></i> Paramètres de connexion</div>
+
+            <form method="post" action="/manageengine/sync">
+                <div class="mb-3">
+                    <label class="form-label">URL du serveur ManageEngine</label>
+                    <input type="text" name="me_url" class="form-control"
+                           placeholder="http://192.168.1.50:8080"
+                           value="{{ me_url or '' }}" required>
+                    <div class="form-text">Adresse IP ou nom de domaine du serveur local, incluant le port d'écoute.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Clé d'authentification API</label>
+                    <input type="password" name="me_apikey" class="form-control"
+                           placeholder="Votre clé API ManageEngine"
+                           value="{{ me_apikey or '' }}" required>
+                    <div class="form-text">Générable depuis : Admin → Technicians → API Key → Generate.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 w-sm-auto">
+                    <i class="bi bi-arrow-repeat me-2"></i>Tester et lancer la synchronisation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="me-card">
+            <div class="section-title"><i class="bi bi-info-circle-fill"></i> Centre d'aide</div>
+            
+            <div class="info-box" style="margin-top: 0;">
+                <div class="info-title">Processus d'import</div>
+                <ul>
+                    <li>Connexion sécurisée à votre instance locale.</li>
+                    <li>Extraction des périphériques via l'API REST.</li>
+                    <li>Indexation automatisée dans l'inventaire DSI.</li>
+                    <li>Mise à jour incrémentale sans doublons.</li>
+                </ul>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-title">Prérequis système</div>
+                <ul>
+                    <li>Terminal connecté au réseau de la mairie (ou via VPN).</li>
+                    <li>Clé API active configurée en lecture seule.</li>
+                    <li>ManageEngine Asset Explorer v6 ou supérieur.</li>
+                </ul>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-title">Sécurité des données</div>
+                <ul>
+                    <li>Les jetons API ne sont jamais persistés en base.</li>
+                    <li>Flux applicatifs restreints au périmètre interne.</li>
+                    <li>Aucune altération des données d'origine.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

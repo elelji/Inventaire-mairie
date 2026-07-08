@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Réinitialisation — Inventaire DSI{% endblock %}
+
+{% block content %}
+<style>
+    /* Design spécifique pour la page d'authentification */
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+    .auth-box {
+        width: 100%;
+        max-width: 400px;
+        background: white;
+        padding: 2.5rem;
+        border-radius: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .form-control:focus {
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+    }
+    .btn-auth {
+        background-color: var(--primary-purple);
+        color: white;
+        border-radius: 12px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-auth:hover {
+        background-color: #3730a3;
+        color: white;
+    }
+</style>
+
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="mb-4">
+            <h4 class="fw-bold text-dark">Réinitialisation</h4>
+            <p class="text-secondary small">Veuillez renseigner votre email professionnel pour recevoir votre jeton de récupération.</p>
+        </div>
+
+        {% if erreur %}
+        <div class="alert alert-danger border-0 rounded-3 mb-3 p-2 small text-center">{{ erreur }}</div>
+        {% endif %}
+
+        {% if succes %}
+        <div class="alert alert-success border-0 rounded-3 mb-3 p-2 small text-center">{{ succes }}</div>
+        {% endif %}
+
+        <form method="post" action="/reset-mdp">
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold">ADRESSE EMAIL</label>
+                <input type="email" name="email" class="form-control form-control-lg rounded-3" placeholder="nom@dsi.fr" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-auth w-100">
+                <i class="bi bi-send me-1"></i> Envoyer le lien
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="/login" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i> Retour à la connexion
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

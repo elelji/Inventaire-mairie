@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Équipements — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec ligne tech violette harmonisée */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* --- CONSOLE DE FILTRAGE COCKPIT --- */
+    .filter-console-panel {
+    background: #ffffff !important; /* On force le blanc pur */
+    border: 2px solid var(--tech-border) !important;
+    border-radius: 12px 3px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .tech-input-sm, .tech-select-sm {
+        font-size: 0.8rem !important;
+        border: 1px solid var(--tech-border) !important;
+        border-radius: 6px !important;
+        color: #1e1b4b !important;
+    }
+    .tech-input-sm:focus, .tech-select-sm:focus {
+        border-color: var(--accent-light) !important;
+        box-shadow: none !important;
+    }
+
+    /* --- TABLE PANEL ANTI-OVERFLOW --- */
+    .tech-table-panel {
+    background: #ffffff !important; /* On force le blanc pur */
+    border: 2px solid var(--tech-border) !important;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .tech-responsive-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        border: 1px solid var(--tech-border) !important;
+    }
+
+    .tech-table-custom {
+        width: 100%;
+        margin-bottom: 0;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    /* [Look Dégradé Moderne] Haut du tableau */
+    .tech-table-custom th {
+        background: linear-gradient(180deg, var(--tech-card-inner) 0%, #edf2f7 100%) !important;
+        color: #4338ca !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        padding: 0.85rem 0.75rem;
+        border-bottom: 2px solid var(--tech-border) !important;
+    }
+
+    /* Base des lignes */
+    .tech-table-custom tr {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 3px solid transparent;
+    }
+
+    .tech-table-custom td {
+        padding: 0.85rem 0.75rem;
+        font-size: 0.82rem;
+        color: #1e1b4b;
+        border-bottom: 1px solid var(--tech-border);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* [Look Scanner Hover] Allumage de la ligne au survol */
+    .tech-table-custom tr:hover {
+        border-left-color: #6366f1 !important;
+        transform: translateX(3px);
+    }
+    .tech-table-custom tr:hover td {
+        background-color: rgba(99, 102, 241, 0.04) !important;
+    }
+
+    /* [Look Code Source / Étiquette] Spécifique aux S/N */
+    .tech-table-custom code {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+        background: #f1f5f9;
+        color: #4338ca !important;
+        padding: 0.2rem 0.45rem;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    /* --- CONFIGURATION DES LARGEURS DE COLONNES --- */
+    .col-nom   { width: 160px; }
+    .col-cat   { width: 120px; }
+    .col-brand { width: 110px; }
+    .col-mod   { width: 110px; }
+    .col-sn    { width: 140px; }
+    .col-lieu  { width: 140px; }
+    .col-salle { width: 110px; }
+    .col-etat  { width: 110px; }
+    .col-com   { width: 160px; }
+    .col-act   { width: 60px; }
+
+    .cell-com { white-space: nowrap !important; }
+
+    /* --- BADGES D'ÉTAT AVEC PULSE LUMINEUX EN TEMPS RÉEL --- */
+    @keyframes status-glow {
+        0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 currentColor; }
+        70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 5px rgba(255,255,255,0); }
+        100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+    }
+
+    .badge-tech-status {
+        padding: 0.3rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .badge-tech-status::before {
+        content: '';
+        display: inline-block;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+    }
+
+    .status-active { background-color: #def7ec; color: #03543f; }
+    
+    /* Animation uniquement sur les statuts d'alerte ou critiques */
+    .status-hs { background-color: #fde8e8; color: #9b1c1c; }
+    .status-hs::before { animation: status-glow 1.8s infinite; }
+    
+    .status-repair { background-color: #fef3c7; color: #92400e; }
+    .status-repair::before { animation: status-glow 2.2s infinite; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="section-title mb-1"><i class="bi bi-cpu"></i> Base de données</div>
+        <h1 class="h4 mb-0 fw-bold text-dark">Équipements</h1>
+    </div>
+    <a href="/create_equipement" class="btn btn-primary btn-sm fw-bold px-3 py-2" style="border-radius: 8px 2px; background-color: #4338ca; border-color: #4338ca;">
+        <i class="bi bi-plus-lg me-1"></i> Ajouter un équipement
+    </a>
+</div>
+
+<div class="card filter-console-panel mb-4">
+    <div class="card-body py-3">
+        <form method="get" action="/equipement" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="small fw-semibold text-muted mb-1">Recherche globale</label>
+                <input type="text" name="search" class="form-control form-control-sm tech-input-sm" placeholder="Nom, S/N, modèle..." value="{{ search or '' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-semibold text-muted mb-1">État opérationnel</label>
+                <select name="etat" class="form-select form-select-sm tech-select-sm">
+                    <option value="">Tous les états</option>
+                    <option value="fonctionnel" {% if etat == 'fonctionnel' %}selected{% endif %}>Fonctionnel</option>
+                    <option value="hors service" {% if etat == 'hors service' %}selected{% endif %}>Hors service</option>
+                    <option value="en réparation" {% if etat == 'en réparation' %}selected{% endif %}>En réparation</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-semibold text-muted mb-1">Lieu / Établissement</label>
+                <select name="lieu" class="form-select form-select-sm tech-select-sm">
+                    <option value="">Tous les lieux</option>
+                    {% for l in lieux %}
+                    {% if l is not none %}
+                    <option value="{{ l }}" {% if lieu == l %}selected{% endif %}>{{ l }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-semibold text-muted mb-1">Catégorie</label>
+                <select name="categorie" class="form-select form-select-sm tech-select-sm">
+                    <option value="">Toutes les catégories</option>
+                    {% for cat in categories %}
+                    {% if cat is not none %}
+                    <option value="{{ cat }}" {% if categorie == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1.5 col-6 ms-auto">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-1-5" style="background-color: #4338ca; border-color: #4338ca;">Filtrer</button>
+            </div>
+            <div class="col-md-1.5 col-6">
+                <a href="/equipement" class="btn btn-outline-secondary btn-sm w-100 py-1-5">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="tech-table-panel">
+    <div class="section-title"><i class="bi bi-hdd-network"></i> Registre matériel</div>
+    
+    <div class="tech-responsive-container">
+        <table class="table tech-table-custom align-middle">
+            <thead>
+                <tr>
+                    <th class="col-nom">Nom</th>
+                    <th class="col-cat">Catégorie</th>
+                    <th class="col-brand">Marque</th>
+                    <th class="col-mod">Modèle</th>
+                    <th class="col-sn">N° Série</th>
+                    <th class="col-lieu">Lieu</th>
+                    <th class="col-salle">Salle</th>
+                    <th class="col-etat">État</th>
+                    <th class="col-com">Commentaire</th>
+                    <th class="col-act text-center"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eq in equipements %}
+                <tr>
+                    <td class="fw-bold text-dark" title="{{ eq.nom if eq.nom else '-' }}">{{ eq.nom if eq.nom else '-' }}</td>
+                    <td><span class="badge text-primary border" style="font-size: 0.72rem; background-color: #e0e7ff; border-color: #c7d2fe !important; color: #4338ca !important;">{{ eq.categorie if eq.categorie else 'Autre' }}</span></td>
+                    <td title="{{ eq.marque if eq.marque else '-' }}">{{ eq.marque if eq.marque else '-' }}</td>
+                    <td title="{{ eq.modele if eq.modele else '-' }}">{{ eq.modele if eq.modele else '-' }}</td>
+                    <td><code>{{ eq.numero_serie if eq.numero_serie else '-' }}</code></td>
+                    <td title="{{ eq.lieu if eq.lieu else '-' }}">{{ eq.lieu if eq.lieu else '-' }}</td>
+                    <td title="{{ eq.salle if eq.salle else '-' }}">{{ eq.salle if eq.salle else '-' }}</td>
+                    <td>
+                        <span class="badge-tech-status 
+                            {% if eq.etat == 'fonctionnel' %}status-active
+                            {% elif eq.etat == 'hors service' %}status-hs
+                            {% else %}status-repair{% endif %}">
+                            {{ eq.etat if eq.etat else 'Inconnu' }}
+                        </span>
+                    </td>
+                    <td class="cell-com text-muted" title="{{ eq.commentaire if eq.commentaire else '-' }}">{{ eq.commentaire or '-' }}</td>
+                    <td class="text-center">
+                        <a href="/equipement/{{ eq.numero_serie }}" class="btn btn-sm btn-light p-1 border" style="border-radius: 4px; background-color: #ffffff;">
+                            <i class="bi bi-eye" style="color: #4338ca;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">
+                        <i class="bi bi-search fs-4 d-block mb-2 text-muted"></i> Aucun équipement trouvé avec ces critères.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

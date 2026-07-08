@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* On retire le display: flex sur body pour ne pas casser le reste du site */
+    .auth-page-container {
+        width: 100%;
+        max-width: 500px; /* Taille idéale pour un formulaire de login */
+        margin: 50px auto; /* Centrage naturel sans casser le responsive */
+        padding: 0 20px;
+    }
+
+    .login-card {
+        background: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Logo simpliste en texte stylisé si tu n'as pas encore d'image */
+    .logo-placeholder {
+        font-size: 2rem;
+        color: #6366f1;
+        margin-bottom: 1rem;
+    }
+
+    .form-label { font-weight: 600; color: #4338ca; }
+    
+    .btn-login {
+        background: #6366f1;
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.7rem;
+        border-radius: 6px;
+    }
+    
+    .btn-login:hover { background: #4f46e5; color: #fff; }
+
+    /* Nouveau style pour le bouton gris */
+    .btn-reset {
+        background: #e2e8f0;
+        color: #475569;
+        font-weight: 600;
+        padding: 0.7rem;
+        border-radius: 6px;
+        border: none;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .btn-reset:hover { background: #cbd5e1; color: #1e293b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <!-- En-tête : Logo + Nom structure -->
+    <div class="text-center mb-4">
+        <div class="logo-placeholder"><i class="bi bi-buildings-fill"></i></div>
+        <h2 class="fw-bold mb-1" style="color: #1e293b;">Mairie de Gonesse</h2>
+        <p class="text-muted">Portail d'authentification — Inventaire DSI</p>
+    </div>
+
+    <!-- Carte de connexion -->
+    <div class="login-card">
+        {% if erreur %}
+        <div class="alert alert-danger small">{{ erreur }}</div>
+        {% endif %}
+
+        <form method="post" action="/login">
+            <div class="mb-3">
+                <label class="form-label">Adresse email</label>
+                <input type="email" name="email" class="form-control" required placeholder="nom@mairie.fr">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Mot de passe</label>
+                <input type="password" name="password" class="form-control" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn btn-login w-100">Se connecter</button>
+            
+            <!-- Nouveau bouton gris -->
+            <a href="/reset_mdp" class="btn-reset w-100">Mot de passe oublié</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

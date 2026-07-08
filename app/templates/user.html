@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-5">
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <h1 class="h2 fw-bold text-dark m-0">Répertoire Système</h1>
+        <div class="px-3 py-1 text-white fw-bold shadow-sm" 
+             style="background: #4338ca; border-radius: 8px 0 8px 0; transform: rotate(-2deg); font-size: 0.8rem;">
+            {{ user|length }} UTILISATEURS
+        </div>
+    </div>
+    
+    <div style="width: 120px; height: 4px; background: #8b5cf6; border-radius: 2px;" class="mb-3"></div>
+    <p class="text-secondary small fw-medium">Administration des accès et privilèges DSI</p>
+</div>
+
+<div class="mb-4">
+    <button type="button" class="btn btn-primary fw-bold px-4 py-2" style="border-radius: 8px 2px; background-color: #4338ca;" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="bi bi-person-plus-fill me-1"></i> Nouvel utilisateur
+    </button>
+</div>
+
+<div class="row g-4">
+    {% for u in user %}
+    <div class="col-md-4 col-lg-3">
+        <div class="user-card position-relative" style="background: #ffffff; border: 2px solid #ddd6fe !important; border-radius: 24px; padding: 1.5rem; text-align: center;">
+            
+            <div class="user-avatar" style="width: 70px; height: 70px; background: #f5f3ff; border-radius: 20px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #4338ca; border: 2px solid #c4b5fd;">
+                <i class="bi {{ 'bi-shield-lock-fill' if u.role.value == 'Admin' else 'bi-person-badge-fill' }}"></i>
+            </div>
+            
+            <h6 class="fw-bold mb-1">{{ u.email }}</h6>
+            <span class="badge mb-3" style="background: #ede9fe; color: #4338ca; border-radius: 8px; border: 1px solid #c4b5fd;">{{ u.role.value }}</span>
+            
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <button class="btn btn-sm btn-outline-primary border-0" style="background: #f5f3ff;" onclick="openEditModal('{{ u.id }}', '{{ u.email }}', '{{ u.role.value }}')" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                    <i class="bi bi-pencil"></i> Modifier
+                </button>
+                <form method="post" action="/admin/utilisateurs/delete/{{ u.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" style="background: #fef2f2;">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form method="post" action="/admin/utilisateurs/creer"><div class="modal-body p-4"><h5 class="fw-bold mb-3">Nouvel utilisateur</h5><div class="mb-3"><label class="small fw-bold">EMAIL</label><input type="email" name="email" class="form-control" required></div><div class="mb-3"><label class="small fw-bold">RÔLE</label><select name="role" class="form-select">{% for r in roles %}<option value="{{ r.value }}">{{ r.value }}</option>{% endfor %}</select></div><button type="submit" class="btn w-100 mt-2" style="background:#4338ca; color:white;">Créer</button></div></form></div></div>
+</div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form id="editUserForm" method="post" action=""><div class="modal-body p-4"><h5 class="fw-bold mb-3">Modifier</h5><div class="mb-3"><label class="small fw-bold">EMAIL</label><input type="email" name="email" id="edit_email" class="form-control" required></div><div class="mb-3"><label class="small fw-bold">RÔLE</label><select name="role" id="edit_role" class="form-select">{% for r in roles %}<option value="{{ r.value }}">{{ r.value }}</option>{% endfor %}</select></div><button type="submit" class="btn w-100 mt-2" style="background:#4338ca; color:white;">Enregistrer</button></div></form></div></div>
+</div>
+
+<style>
+    /* Mouvement au survol rétabli et amélioré */
+    .user-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .user-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 30px rgba(139, 92, 246, 0.2); border-color: #4338ca !important; }
+    
+    .user-avatar { transition: all 0.6s ease; }
+    .user-card:hover .user-avatar { transform: rotate(360deg); background: #4338ca !important; color: white !important; }
+    
+    .row { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+    function openEditModal(id, email, role) {
+        document.getElementById('editUserForm').action = '/admin/utilisateurs/modifier/' + id;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_role').value = role;
+    }
+</script>
+{% endblock %}

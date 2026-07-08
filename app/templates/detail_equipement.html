@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}{{ equipement.nom }} — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card:hover {
+        transform: none !important;
+    }
+    
+    /* Section titre avec indicateur tech linéaire */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--tech-primary);
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Style de la liste historique type fil d'ariane / logs tech */
+    .histo-timeline {
+        position: relative;
+        padding-left: 1.5rem;
+        border-left: 2px solid var(--tech-border);
+    }
+    .histo-item {
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    .histo-item:last-child {
+        padding-bottom: 0;
+    }
+    .histo-marker {
+        position: absolute;
+        left: calc(-1.5rem - 6px);
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--tech-border);
+        border: 2px solid #ffffff;
+    }
+    .histo-item:first-child .histo-marker {
+        background-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(var(--tech-primary-rgb, 99, 102, 241), 0.2);
+    }
+    
+    /* Badges d'actions adoucis pour l'historique local */
+    .badge-act-ajout { background-color: #def7ec; color: #03543f; font-size: 0.75rem; }
+    .badge-act-suppr { background-color: #fde8e8; color: #9b1c1c; font-size: 0.75rem; }
+    .badge-act-modif { background-color: #fef3c7; color: #92400e; font-size: 0.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de page -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="section-title"><i class="bi bi-pc-display"></i> Fiche Équipement</div>
+        <h1 class="h4 mb-0 fw-bold" style="color: var(--tech-text);">{{ equipement.nom }}</h1>
+        <a href="/equipement" class="text-muted small text-decoration-none d-inline-flex align-items-center mt-1">
+            <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+        </a>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/edit_equipement/{{ equipement.numero_serie }}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Modifier
+        </a>
+        <button type="button" class="btn btn-outline-secondary text-danger border-danger-subtle bg-white"
+                style="transition: all 0.2s;"
+                onmouseover="this.style.backgroundColor='#fde8e8'"
+                onmouseout="this.style.backgroundColor='#ffffff'"
+                data-bs-toggle="modal"
+                data-bs-target="#modalSupprimer"
+                data-serie="{{ equipement.numero_serie }}">
+            <i class="bi bi-trash3-fill me-1"></i>Supprimer
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Fiche Technique -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-info-circle me-2"></i>Informations générales</div>
+            <div class="card-body p-4">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr class="align-middle"><th style="width:40%" class="text-muted fw-semibold">Catégorie</th><td class="fw-medium">{{ equipement.categorie }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Marque</th><td class="fw-medium">{{ equipement.marque }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Modèle</th><td class="fw-medium">{{ equipement.modele }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">N° de série</th><td><span class="badge bg-light text-dark border font-monospace fs-6">{{ equipement.numero_serie }}</span></td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Date d'installation</th><td class="fw-medium">{{ equipement.date_installation }}</td></tr>
+                    <tr class="align-middle">
+                        <th class="text-muted fw-semibold">État</th>
+                        <td>
+                            <span class="badge
+                                {% if equipement.etat == 'fonctionnel' %}badge-etat-fonctionnel
+                                {% elif equipement.etat == 'hors service' %}badge-etat-hs
+                                {% else %}badge-etat-reparation{% endif %}">
+                                {{ equipement.etat }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Localisation -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-geo-alt me-2"></i>Localisation & usager</div>
+            <div class="card-body p-4">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr class="align-middle"><th style="width:40%" class="text-muted fw-semibold">Lieu / École</th><td class="fw-medium">{{ equipement.lieu }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Salle</th><td><code class="text-dark fw-bold">{{ equipement.salle }}</code></td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Usager</th><td class="fw-medium">{{ equipement.usager }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commentaire facultatif -->
+    {% if equipement.commentaire %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-chat-left-text me-2"></i>Commentaire</div>
+            <div class="card-body p-4 text-secondary" style="white-space: pre-line;">{{ equipement.commentaire }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- BLOC HISTORIQUE HARMONISÉ -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Historique des modifications</div>
+            <div class="card-body p-4">
+                {% if historique %}
+                <div class="histo-timeline ms-2">
+                    {% for h in historique %}
+                    <div class="histo-item">
+                        <div class="histo-marker"></div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="badge 
+                                {% if h.action == 'Ajout' %}badge-act-ajout
+                                {% elif h.action == 'Suppression' %}badge-act-suppr
+                                {% else %}badge-act-modif{% endif %}">
+                                {{ h.action }}
+                            </span>
+                            <span class="text-muted small">{{ h.date_action }}</span>
+                            <span class="text-secondary small ms-sm-auto"><i class="bi bi-person me-1"></i>{{ h.utilisateur }}</span>
+                        </div>
+                        {% if h.commentaire %}
+                        <div class="small text-secondary bg-light p-2 rounded border-start border-2 mt-1" style="border-color: var(--tech-border) !important;">
+                            {{ h.commentaire }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3 small">
+                    <i class="bi bi-info-circle me-1"></i> Aucun historique enregistré pour cet équipement.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals Block -->
+{% block modals %}
+<div class="modal fade" id="modalSupprimer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--tech-card-inner); border: 2px solid var(--tech-border); border-radius: 16px 4px; box-shadow: var(--tech-shadow-hover); overflow: hidden;">
+            
+            <div class="modal-header" style="background-color: rgba(248, 180, 180, 0.15); border-bottom: 2px solid rgba(248, 180, 180, 0.3);">
+                <h5 class="modal-title fw-bold" style="color: #9b1c1c;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Supprimer l'équipement
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form method="post" id="formSupprimer">
+                <div class="modal-body p-4">
+                    <div class="alert badge-etat-reparation d-flex align-items-start gap-2 mb-3" role="alert">
+                        <i class="bi bi-info-circle-fill fs-5 flex-shrink-0"></i>
+                        <span class="small">Cet équipement sera déplacé dans la <strong>corbeille</strong>.</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small mb-2" style="color: var(--tech-text);">Motif <span class="text-danger">*</span></label>
+                        <textarea name="commentaire_suppression" class="form-control" rows="3"
+                                  placeholder="Motif de suppression..." required
+                                  style="background-color: #fafbfc; border: 2px solid var(--tech-border); border-radius: 10px; resize: none;"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal" style="border-radius: 10px;">Annuler</button>
+                    <button type="submit" class="btn btn-danger px-3" style="background-color: #ef4444; border-color: #ef4444; border-radius: 10px; font-weight: 600; transition: all 0.2s;">
+                        <i class="bi bi-trash3 me-1"></i>Confirmer
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modalSupprimer = document.getElementById('modalSupprimer');
+    if (modalSupprimer) {
+        modalSupprimer.addEventListener('show.bs.modal', function(event) {
+            const serie = event.relatedTarget.getAttribute('data-serie');
+            document.getElementById('formSupprimer').action = '/delete_equipement/' + serie;
+        });
+    }
+});
+</script>
+{% endblock %}

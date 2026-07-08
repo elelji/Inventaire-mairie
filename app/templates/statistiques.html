@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}Statistiques — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec indicateur tech linéaire harmonisé sur le violet */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* Carte statistique harmonisée sur ton thème violet */
+    .stat-card {
+        background: var(--tech-card-inner) !important;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px 4px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(49, 46, 129, 0.1);
+        border-color: var(--accent-light) !important;
+    }
+    /* Focus professionnel pour tous les champs de saisie */
+.form-control:focus, 
+.form-select:focus {
+    border-color: #8b5cf6 !important; /* Couleur violette */
+    box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important; /* Le halo doux */
+    outline: none !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="section-title"><i class="bi bi-bar-chart-line-fill"></i> Analytique</div>
+    <h1 class="h4 fw-bold" style="color: var(--tech-text) !important;">Analyse du parc informatique</h1>
+    <p class="text-muted small">Métriques globales et état de santé de l'infrastructure.</p>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-md-7">
+        <div class="stat-card">
+            <div class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">
+                <i class="bi bi-geo-alt me-1" style="color: var(--topbar-bg);"></i> Équipements par lieu
+            </div>
+            <div style="position: relative; min-height: 250px;">
+                <canvas id="chartLieu"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="stat-card">
+            <div class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">
+                <i class="bi bi-pie-chart me-1" style="color: var(--topbar-bg);"></i> Répartition par état
+            </div>
+            <div style="height: 240px; position: relative;" class="d-flex justify-content-center">
+                <canvas id="chartEtat"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="stat-card">
+            <div class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">
+                <i class="bi bi-shield-check me-1" style="color: var(--topbar-bg);"></i> Garanties VPI (Total : {{ total_items }})
+            </div>
+            <div style="height: 240px; position: relative;" class="d-flex justify-content-center">
+                <canvas id="chartGarantiesVpi"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="stat-card">
+            <div class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">
+                <i class="bi bi-grid me-1" style="color: var(--topbar-bg);"></i> Équipements par catégorie
+            </div>
+            <div style="position: relative; min-height: 250px;">
+                <canvas id="chartCategorie"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="stat-card">
+            <div class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">
+                <i class="bi bi-calendar-check me-1" style="color: var(--topbar-bg);"></i> Installations par année
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="chartAnnee"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function() {
+        function buildCharts() {
+            if (typeof Chart === 'undefined') {
+                setTimeout(buildCharts, 100);
+                return;
+            }
+
+            const textColor = '#1e1b4b'; 
+            const gridColor = 'rgba(30, 27, 75, 0.08)'; 
+            const colors = ['#312e81', '#4338ca', '#6366f1', '#818cf8', '#a5b4fc', '#c084fc', '#e9d5ff', '#a78bfa'];
+
+            // Extraction et conversion sécurisée des tuples Python
+            const lieuLabels = [{% for item in equipement_lieu %}"{{ item[0] if item[0] is not none else 'Non spécifié' }}"{% if not loop.last %},{% endif %}{% endfor %}];
+            const lieuData = [{% for item in equipement_lieu %}{{ item[1] if item[1] is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+            const etatLabels = [{% for item in equipement_etat %}"{{ item[0] if item[0] is not none else 'Inconnu' }}"{% if not loop.last %},{% endif %}{% endfor %}];
+            const etatData = [{% for item in equipement_etat %}{{ item[1] if item[1] is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+            const catLabels = [{% for item in equipement_categorie %}"{{ item[0] if item[0] is not none else 'Autre' }}"{% if not loop.last %},{% endif %}{% endfor %}];
+            const catData = [{% for item in equipement_categorie %}{{ item[1] if item[1] is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+            const anneeLabels = [{% for item in installations_annee %}"{{ item[0] if item[0] is not none else 'Inconnue' }}"{% if not loop.last %},{% endif %}{% endfor %}];
+            const anneeData = [{% for item in installations_annee %}{{ item[1] if item[1] is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+            // 1. Lieu
+            new Chart(document.getElementById('chartLieu'), {
+                type: 'bar',
+                data: {
+                    labels: lieuLabels,
+                    datasets: [{
+                        label: 'Équipements',
+                        data: lieuData,
+                        backgroundColor: '#4338ca',
+                        borderRadius: 5
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor }, ticks: { precision: 0 } } }
+                }
+            });
+
+            // 2. État
+            new Chart(document.getElementById('chartEtat'), {
+                type: 'doughnut',
+                data: {
+                    labels: etatLabels,
+                    datasets: [{
+                        data: etatData,
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#6366f1']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // 3. Garanties VPI
+            new Chart(document.getElementById('chartGarantiesVpi'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sous garantie', 'Proche expiration', 'Expirée'],
+                    datasets: [{
+                        data: [{{ count_ok }}, {{ count_warn }}, {{ count_danger }}],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // 4. Catégories
+            new Chart(document.getElementById('chartCategorie'), {
+                type: 'bar',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        label: 'Équipements',
+                        data: catData,
+                        backgroundColor: colors,
+                        borderRadius: 5
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y', 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { color: gridColor }, ticks: { precision: 0 } }, y: { grid: { display: false } } }
+                }
+            });
+
+            // 5. Année
+            new Chart(document.getElementById('chartAnnee'), {
+                type: 'line',
+                data: {
+                    labels: anneeLabels,
+                    datasets: [{
+                        label: 'Installations',
+                        data: anneeData,
+                        borderColor: '#4338ca',
+                        backgroundColor: 'rgba(67, 56, 202, 0.05)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor }, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        buildCharts();
+    })();
+</script>
+{% endblock %}

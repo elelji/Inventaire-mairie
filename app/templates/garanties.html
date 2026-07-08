@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Garanties — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section titre avec ligne tech violette harmonisée */
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--tech-border), transparent);
+    }
+
+    /* --- ARCHITECTURE GRID ASYMETRIQUE --- */
+    .garantie-layout {
+        display: grid;
+        grid-template-columns: 8.5fr 3.5fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+        .garantie-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- FLUX DES GARANTIES (GAUCHE) --- */
+    .garantie-main-panel {
+        background: #ffffff;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .garantie-strip {
+        background: #f8fafc;
+        border: 1px solid var(--tech-border);
+        border-radius: 10px 2px;
+        padding: 0.9rem 1.2rem;
+        display: grid;
+        grid-template-columns: auto 2.5fr 2.5fr 1fr auto;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.6rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        border-left: 3px solid transparent;
+    }
+    
+    @media (max-width: 768px) {
+        .garantie-strip {
+            grid-template-columns: auto 1fr auto;
+            gap: 0.75rem;
+        }
+        .time-block-tech { display: none !important; }
+    }
+
+    /* [Look Scanner Hover] La ligne s'allume en violet */
+    .garantie-strip:hover {
+        background: #ffffff;
+        transform: translateX(4px);
+        border-left-color: #6366f1 !important;
+        border-top-color: var(--accent-light) !important;
+        border-right-color: var(--accent-light) !important;
+        border-bottom-color: var(--accent-light) !important;
+        box-shadow: 0 10px 15px -3px rgba(49, 46, 129, 0.05);
+    }
+
+    /* Indicateurs verticaux de criticité */
+    .critic-bar { width: 4px; height: 42px; border-radius: 2px; flex-shrink: 0; }
+    .critic-bar.danger { background: #ef4444; }
+    .critic-bar.warning { background: #f59e0b; }
+    .critic-bar.success { background: #10b981; }
+
+    /* Étiquette de S/N type code source indus */
+    .sn-spec {
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        background: #e0e7ff;
+        color: #4338ca !important;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 700;
+        display: inline-block;
+        border: 1px solid #c7d2fe;
+    }
+
+    /* Blocs temporels alignés */
+    .time-block-tech {
+        display: flex;
+        flex-direction: column;
+        border-left: 1px dashed var(--tech-border);
+        padding-left: 0.75rem;
+    }
+    .time-label {
+        font-size: 0.68rem;
+        color: #4b5563;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .time-value {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e1b4b;
+    }
+
+    /* Badges de statut */
+    .status-tag {
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        text-align: center;
+        min-width: 90px;
+        display: inline-block;
+    }
+    .status-tag.danger { background: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; }
+    .status-tag.warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .status-tag.success { background: #def7ec; color: #03543f; border: 1px solid #bdf2d5; }
+
+    /* --- PANELS DE STATS (DROITE) --- */
+    .coverage-panel {
+        background: var(--tech-card-inner) !important;
+        border: 2px solid var(--tech-border) !important;
+        border-radius: 16px 4px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+    .ring-metric-box {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: #ffffff;
+        border: 1px solid var(--tech-border);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+    }
+    .mini-ring {
+        position: relative;
+        width: 55px; height: 55px;
+        flex-shrink: 0;
+    }
+    .mini-ring svg { transform: rotate(-90deg); }
+    .mini-ring-value {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Entête de la page -->
+<div class="mb-4">
+    <div class="section-title mb-1"><i class="bi bi-shield-check"></i> Sécurité & Contrats</div>
+    <h1 class="h4 fw-bold text-dark">État des garanties</h1>
+</div>
+
+<div class="garantie-layout">
+
+    <!-- GAUCHE : FLUX DES GARANTIES -->
+    <div class="garantie-main-panel">
+        <div class="section-title"><i class="bi bi-hdd-stack"></i> Équipements sous contrat</div>
+        
+        <div class="d-flex flex-column">
+            {% for item in garanties_avec_statut %}
+            <div class="garantie-strip" onclick="window.location='/equipement/{{ item.garantie.equipement.numero_serie }}'">
+                
+                <!-- 1. Barre d'état latérale -->
+                <div class="critic-bar {% if item.statut == 'expiré' %}danger{% elif item.statut == 'bientôt' %}warning{% else %}success{% endif %}"></div>
+                
+                <!-- 2. Identité Équipement -->
+                <div class="text-truncate">
+                    <div class="fw-bold text-dark mb-1" style="font-size: 0.92rem;">{{ item.garantie.equipement.lieu if item.garantie.equipement.lieu else 'Lieu non spécifié' }}</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.78rem;">
+                        <i class="bi bi-geo-alt me-1"></i>{{ item.garantie.equipement.salle if item.garantie.equipement.salle else '-' }}
+                    </div>
+                </div>
+
+                <!-- 3. Cycle (Début & Fin) -->
+                <div class="time-block-tech">
+                    <div class="time-label"><i class="bi bi-calendar-plus me-1"></i>Début & Échéance</div>
+                    <div class="time-value" style="font-size: 0.78rem; font-weight: 500;">
+                        Du {{ item.garantie.date_debut if item.garantie.date_debut else 'Inconnue' }}<br>Au <span class="fw-bold text-dark">{{ item.garantie.date_fin if item.garantie.date_fin else 'Inconnue' }}</span>
+                    </div>
+                </div>
+
+                <!-- 4. Durée Totale -->
+                <div class="time-block-tech">
+                    <div class="time-label"><i class="bi bi-hourglass-split me-1"></i>Validité</div>
+                    <div class="time-value">{{ item.garantie.duree_mois if item.garantie.duree_mois is not none else '0' }} <span style="font-size: 0.7rem; font-weight: 500;">mois</span></div>
+                </div>
+
+                <!-- 5. Badge de Statut Final -->
+                <div class="ms-auto">
+                    <span class="status-tag {% if item.statut == 'expiré' %}danger{% elif item.statut == 'bientôt' %}warning{% else %}success{% endif %}">
+                        {% if item.statut == 'expiré' %}⚠ Expiré
+                        {% elif item.statut == 'bientôt' %}⏳ Échéance
+                        {% else %}✓ Actif{% endif %}
+                    </span>
+                    <div class="text-end mt-1"><span class="sn-spec" style="font-size: 0.65rem;">{{ item.garantie.equipement.numero_serie if item.garantie.equipement.numero_serie else 'S/N' }}</span></div>
+                </div>
+
+            </div>
+            {% else %}
+            <div class="text-muted text-center py-5">
+                <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+                Aucun équipement enregistré sous contrat.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- DROITE : COMPTEURS EN RONDS (MÉTRIQUES) -->
+    <div class="coverage-panel">
+        <div class="section-title mb-0"><i class="bi bi-pie-chart-fill"></i> Synthèse de couverture</div>
+
+        <!-- Rond 1 : Contrats OK -->
+        <div class="ring-metric-box">
+            <div class="mini-ring">
+                <svg width="55" height="55" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="12" 
+                            stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (count_ok / (total_items if total_items and total_items > 0 else 1)))|round(1) }}"/>
+                </svg>
+                <div class="mini-ring-value text-dark fw-bold">{{ count_ok if count_ok is not none else 0 }}</div>
+            </div>
+            <div>
+                <div class="fw-bold text-dark small">Matériels Sécurisés</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Garantie active (OK)</div>
+            </div>
+        </div>
+
+        <!-- Rond 2 : Alertes Échéances -->
+        <div class="ring-metric-box">
+            <div class="mini-ring">
+                <svg width="55" height="55" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" stroke-width="12" 
+                            stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (count_warn / (total_items if total_items and total_items > 0 else 1)))|round(1) }}"/>
+                </svg>
+                <div class="mini-ring-value text-warning fw-bold">{{ count_warn if count_warn is not none else 0 }}</div>
+            </div>
+            <div>
+                <div class="fw-bold text-dark small">Fin de contrat proche</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Statut : Bientôt expiré</div>
+            </div>
+        </div>
+
+        <!-- Rond 3 : Hors Contrat -->
+        <div class="ring-metric-box">
+            <div class="mini-ring">
+                <svg width="55" height="55" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#ef4444" stroke-width="12" 
+                            stroke-dasharray="263.8" stroke-dashoffset="{{ 263.8 - (263.8 * (count_danger / (total_items if total_items and total_items > 0 else 1)))|round(1) }}"/>
+                </svg>
+                <div class="mini-ring-value text-danger fw-bold">{{ count_danger if count_danger is not none else 0 }}</div>
+            </div>
+            <div>
+                <div class="fw-bold text-dark small">Contrats Obsolètes</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Garanties expirées</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

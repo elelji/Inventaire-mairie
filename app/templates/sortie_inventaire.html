@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Sortie d'Inventaire — Inventaire DSI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container { max-width: 700px; margin: 0 auto; }
+
+    /* Section titre harmonisée */
+    .section-title {
+        font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em;
+        color: var(--topbar-bg) !important; margin-bottom: 1.2rem;
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 700;
+    }
+    .section-title::after, .section-title::before {
+        content: ''; width: 40px; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--tech-border));
+    }
+    .section-title::before { background: linear-gradient(90deg, var(--tech-border), transparent); }
+
+    .report-card {
+        background: white;
+        border: 2px solid var(--tech-border);
+        border-radius: 16px 4px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-control, .form-select {
+        background: #f8fafc;
+        border: 2px solid var(--tech-border);
+        color: #1e1b4b;
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        border-radius: 6px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--topbar-bg);
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(67, 56, 192, 0.1);
+    }
+
+    .label-tech { 
+        font-size: 0.7rem; color: var(--topbar-bg);
+        font-weight: 900; text-transform: uppercase; margin-bottom: 0.6rem; 
+        letter-spacing: 0.05em;
+    }
+
+    .btn-generate {
+        background: var(--topbar-bg);
+        color: white;
+        border: none;
+        padding: 1.2rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.1em;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
+    .btn-generate:hover { 
+        background: #3730a3;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="mb-5 text-center">
+        <div class="section-title"><i class="bi bi-cpu-fill"></i> EXPORT_MODULE</div>
+        <h2 class="fw-bold" style="color: #1e1b4b;">Génération de Rapport</h2>
+    </div>
+
+    <div class="report-card">
+        <form method="post" action="/sortie_inventaire/pdf">
+            
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="label-tech">Période début</div>
+                    <input type="date" name="date_debut" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <div class="label-tech">Période fin</div>
+                    <input type="date" name="date_fin" class="form-control">
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="label-tech">Filtrage Lieux</div>
+                    <select name="lieux" class="form-select" multiple size="4">
+                        {% for lieu in lieux %}
+                        <option value="{{ lieu }}">{{ lieu }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="label-tech">Filtrage Catégories</div>
+                    <select name="categories" class="form-select" multiple size="4">
+                        {% for cat, count in categories %}
+                        <option value="{{ cat }}">{{ cat }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-generate w-100">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Exporter en PDF
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

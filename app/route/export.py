@@ -138,7 +138,7 @@ async def export(
     align_center = Alignment(horizontal="center", vertical="center")
 
     # 3. Ajout des en-têtes (Ligne 1)
-    headers = ["Nom", "Lieu", "Salle", "Catégorie", "Marque", "Modèle", "N° Série", "État", "Date d'installation"]
+    headers = ["Lieu", "Salle", "Nom", "Catégorie", "Marque", "Modèle", "N° Série", "État", "Date d'installation"]
     ws.append(headers)
     
     # Style de la ligne d'en-tête
@@ -153,17 +153,17 @@ async def export(
         date_formatee = e.date_installation.strftime("%d/%m/%Y") if e.date_installation else ""
         
         ws.append([
-            e.nom or "",
-            e.lieu or "",
-            e.salle or "",
-            e.categorie or "",
-            e.marque or "",
-            e.modele or "",
-            e.numero_serie or "",
-            e.etat or "",
-            date_formatee
-        ])
-        
+        e.lieu or "",
+        e.salle or "",
+        e.nom or "",
+        e.categorie or "",
+        e.marque or "",
+        e.modele or "",
+        e.numero_serie or "",
+        e.etat or "",
+        date_formatee
+    ])
+            
         # Style de la ligne de données courante
         ws.row_dimensions[index].height = 20  # Lignes plus spacieuses
         for cell in ws[index]:
@@ -368,3 +368,117 @@ async def sortie_inventaire(
     except Exception as e:
         print(f"ERREUR PDF : {e}")
         return Response(content=str(e), media_type="text/plain")
+
+@router.post("/sortie_inventaire/excel")
+async def sortie_inventaire_excel(
+    request: Request,
+    current_user: User = Depends(require_permission("generer_sortie_inventaire")),
+    session: Session = Depends(get_session),
+    lieux: list[str] = Form(default=[]),
+    categories: list[str] = Form(default=[]),
+    date_debut: date = Form(default=None),
+    date_fin: date = Form(default=None),
+):
+    statement = (
+        select(Historique, Equipement)
+        .join(Equipement, Historique.equipement_id == Equipement.id, isouter=True)
+        .where(Equipement.dans_corbeille == True).where(Historique.action == str("Suppression"))
+        .order_by(Historique.id.desc())
+    )
+    if date_debut:
+        statement = statement.where(Historique.date_action >= (date_debut))
+    if date_fin:
+        statement = statement.where(Historique.date_action <= (date_fin))
+    if lieux:
+        statement = statement.where(Equipement.lieu.in_(lieux))
+    if categories:
+        statement = statement.where(Equipement.categorie.in_(categories))
+
+    result = session.exec(statement).all()
+    equipements_sortie = [
+        {
+            "equipement": equipement,
+            "date_suppression": historique.date_action,
+            "commentaire": historique.commentaire,
+        }
+        for historique, equipement in result
+    ]
+
+    # --- Création du classeur Excel ---
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Sortie Inventaire"
+
+    bleu_fonce_dsi = "1A3A5C"
+    bleu_clair_zebra = "F8FAFC"
+    texte_blanc = "FFFFFF"
+
+    font_header = Font(name="Segoe UI", size=11, bold=True, color=texte_blanc)
+    font_data = Font(name="Segoe UI", size=10)
+
+    fill_header = PatternFill(start_color=bleu_fonce_dsi, end_color=bleu_fonce_dsi, fill_type="solid")
+    fill_zebra = PatternFill(start_color=bleu_clair_zebra, end_color=bleu_clair_zebra, fill_type="solid")
+
+    bd_fine = Side(style="thin", color="E2E8F0")
+    border_data = Border(left=bd_fine, right=bd_fine, top=bd_fine, bottom=bd_fine)
+
+    align_left = Alignment(horizontal="left", vertical="center")
+    align_center = Alignment(horizontal="center", vertical="center")
+
+    headers = ["Lieu", "Salle", "Nom", "Catégorie", "Marque", "Modèle", "N° Série", "État", "Date d'installation"]    
+    ws.append(headers)
+
+    ws.row_dimensions[1].height = 26
+    for cell in ws[1]:
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.alignment = align_center
+
+    for index, item in enumerate(equipements_sortie, start=2):
+        e = item["equipement"]
+        date_suppr = item["date_suppression"].strftime("%d/%m/%Y") if item["date_suppression"] else ""
+
+        ws.append([
+            e.lieu or "",
+            e.salle or "",
+            e.nom or "",
+            e.categorie or "",
+            e.marque or "",
+            e.modele or "",
+            e.numero_serie or "",
+            e.etat or "",
+            date_formatee
+        ])
+    
+        ws.row_dimensions[index].height = 20
+        for cell in ws[index]:
+            cell.font = font_data
+            cell.border = border_data
+
+            if cell.column == 8:  # Date de suppression
+                cell.alignment = align_center
+            else:
+                cell.alignment = align_left
+
+            if index % 2 == 0:
+                cell.fill = fill_zebra
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                max_len = max(max_len, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    filename = f"sortie_inventaire_DSI_{date.today().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+

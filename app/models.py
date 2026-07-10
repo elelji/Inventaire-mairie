@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, create_engine, Relationship
+from sqlmodel import SQLModel, Field, create_engine, Relationship, select, Session
 from typing import Optional
 from datetime import date, datetime
 from enum import Enum
@@ -79,6 +79,18 @@ class User(SQLModel, table=True):
     reset_token_expiration: Optional[datetime] = None   
     totp_secret: Optional[str] = None
     totp_active: bool = Field(default=False)
+    def has_perm(self, nom_permission: str, session: Session) -> bool:
+        if self.role == Role.administrateur:
+            return True
+        if self.role == Role.utilisateur:
+            return False
+        stmt = select(Permission).where(Permission.nom == nom_permission)
+        perm = session.exec(stmt).first()
+
+        if perm is None:
+            return False
+            
+        return perm.actif_pour_technicien
 
 #class permission
 class Permission(SQLModel, table=True):

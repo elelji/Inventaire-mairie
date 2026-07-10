@@ -9,36 +9,42 @@ from app.auth import require_permission, require_login
 
 router = APIRouter()
 
-#GET - Garanties
+#GET - Garanties@router.get("/garanties")
 @router.get("/garanties")
-async def garanties(request: Request, current_user: User = Depends(require_login),session: Session = Depends(get_session)):
+async def garanties(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
     garanties = session.exec(select(Garantie)).all()
     garanties_avec_statut = []
-    print(f"Nombre de garanties : {len(garanties)}")
     for g in garanties:
-        print(g.date_fin, type(g.date_fin))
         if g.date_fin < date.today():
             statut = "expiré"
-        elif g.date_fin < date.today() + relativedelta(months=3):
-            statut = "bientôt"
+            mois_restant = 0
         else:
-            statut = "ok"
-        garanties_avec_statut.append({"garantie": g, "statut": statut})
+            delta = relativedelta(g.date_fin, date.today())
+            mois_restant = delta.years * 12 + delta.months
+            if g.date_fin < date.today() + relativedelta(months=3):
+                statut = "bientôt"
+            else:
+                statut = "ok"
+
+        garanties_avec_statut.append({"garantie": g, "statut": statut, "mois_restant": mois_restant})
+
     count_ok = sum(1 for item in garanties_avec_statut if item["statut"] == "ok")
     count_warn = sum(1 for item in garanties_avec_statut if item["statut"] == "bientôt")
     count_danger = sum(1 for item in garanties_avec_statut if item["statut"] == "expiré")
+
     return templates.TemplateResponse(
         request=request,
         name="garanties.html",
         context={
-    "garanties_avec_statut": garanties_avec_statut,
-    "count_ok": count_ok,
-    "count_warn": count_warn,
-    "count_danger": count_danger,
-    "total_items": len(garanties_avec_statut)
+            "garanties_avec_statut": garanties_avec_statut,
+            "count_ok": count_ok,
+            "count_warn": count_warn,
+            "count_danger": count_danger,
+            "total_items": len(garanties_avec_statut)
         }
     )
 
+    
 #GET - statistiques
 @router.get("/statistiques")
 async def statistiques(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):

@@ -7,3 +7,5 @@ venv/
 *.sqlite
 notes.md
 prompt.md
+deploiement.md
+script.md

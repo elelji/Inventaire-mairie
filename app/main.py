@@ -10,10 +10,10 @@ from fastapi.staticfiles import StaticFiles
 from .route import equipement, auth, admin, corbeille, lieux, export, manageengine, garantie, user, consommable
 from app.models import Equipement, Garantie, Consommable, Historique, User, Lieu
 from sqlmodel import Field, SQLModel, create_engine, Session, select, func
-from app.dependencies import templates, get_session, engine
+from app.dependencies import templates, get_session, engine, logger
 from dateutil.relativedelta import relativedelta
 from starlette.middleware.sessions import SessionMiddleware
-from app.auth import require_login
+from app.auth import require_login, get_current_user
 import logging
 from dotenv import load_dotenv
 
@@ -42,11 +42,15 @@ app.include_router(manageengine.router)
 app.include_router(corbeille.router)
 app.include_router(consommable.router)
 
-
-app.mount("/static", StaticFiles(directory="app/static"), name="static")  # Monter les fichiers static
+#FONCTION UTILITAIRE POUR METTRE LES CADENAS ET FLOUTTE SI PAS LES PERM
+def get_template_context(request: Request, session: Session, user: User = None):
+    return {
+        "current_user": user,
+        "can": lambda nom: user.has_perm(nom, session) if user else False
+    }
 
 @app.get("/")
-def read_root(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
+def read_root(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session), user: User | None = Depends(get_current_user)):
     equipements = session.exec(select(Equipement)).all()
     consommables = session.exec(select(Consommable).where(Consommable.remplace == False)).all()
     lieux = session.exec(select(Lieu)).all()
@@ -82,6 +86,7 @@ def read_root(request: Request, current_user: User = Depends(require_login), ses
     ordre = {"expiré": 0, "bientôt": 1, "ok": 2}
     garanties_dashboard.sort(key=lambda x: (ordre[x["statut"]], x["garantie"].date_fin))
     garanties_dashboard = garanties_dashboard[:5]  # top 5
+    contexte_securite = get_template_context(request, session, user)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -98,5 +103,25 @@ def read_root(request: Request, current_user: User = Depends(require_login), ses
             "equipements": equipements,
             "consommables": consommables,
             "lieux": lieux,
+            **contexte_securite
         }
+    )
+
+@app.exception_handler(Exception)
+async def gestion_erreur_globale(request: Request, exc: Exception):
+    user_id = request.session.get("user_id")
+    email = "Anonyme"
+    if user_id:
+        with Session(engine) as session:
+            user = session.get(User, user_id)
+            if user:
+                email = user.email
+
+    logger.error(f"Erreur sur {request.url} - Utilisateur: {email} - Détail: {exc}")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="erreur.html",
+        context={},
+        status_code=500
     )

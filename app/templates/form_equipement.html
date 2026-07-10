@@ -1,3 +1,4 @@
+{% import "macros.html" as ui %}
 {% extends "base.html" %}
 {% block title %}{% if equipement %}Modifier{% else %}Ajouter{% endif %} un équipement — Inventaire DSI{% endblock %}
 
@@ -99,6 +100,7 @@
     </h1>
 </div>
 
+{% call ui.protected('ajouter_equipement') %}
 <div class="card tech-form-panel">
     <div class="card-body p-0">
         <form method="post" action="{% if equipement %}/change_equipement/{{ equipement.numero_serie }}{% else %}/create_equipement{% endif %}">
@@ -152,7 +154,7 @@
                 
                 <div class="col-md-4">
                     <label class="form-label">Lieu / Établissement</label>
-                    <select name="lieu" class="form-select tech-select">
+                    <select name="lieu" class="form-select tech-select" id="select-lieu">
                         <option value="">-- Sélectionner un lieu --</option>
                         {% for l in lieux %}
                         {% if l is not none %}
@@ -164,7 +166,15 @@
                 
                 <div class="col-md-4">
                     <label class="form-label">Salle / Bureau</label>
-                    <input type="text" name="salle" class="form-control tech-input" value="{{ equipement.salle if equipement else '' }}" placeholder="Ex: Salle 102, B04...">
+                    <div class="d-flex gap-2">
+                        <select name="salle" class="form-select tech-select" id="select-salle">
+                            <option value="">-- Sélectionner une salle --</option>
+                            {% if equipement and equipement.salle %}
+                            <option value="{{ equipement.salle }}" selected>{{ equipement.salle }}</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <input type="text" name="nouvelle_salle" id="nouvelle-salle" class="form-control tech-input mt-2" placeholder="Saisir la nouvelle salle..." style="display:none;">
                 </div>
                 
                 <div class="col-md-4">
@@ -196,6 +206,7 @@
         </form>
     </div>
 </div>
+{% endcall %}
 
 <script>
 function toggleNouvelleCategorie() {
@@ -212,5 +223,44 @@ function toggleNouvelleCategorie() {
         select.name = 'categorie';
     }
 }
+
+document.getElementById('select-lieu').addEventListener('change', function () {
+    const lieu = this.value;
+    const selectSalle = document.getElementById('select-salle');
+    const inputNouvelleSalle = document.getElementById('nouvelle-salle');
+
+    selectSalle.innerHTML = '<option value="">-- Sélectionner une salle --</option>';
+    inputNouvelleSalle.style.display = 'none';
+    inputNouvelleSalle.value = '';
+
+    if (!lieu) return;
+
+    fetch(`/api/salles?lieux=${encodeURIComponent(lieu)}`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.salle;
+                option.textContent = item.salle;
+                selectSalle.appendChild(option);
+            });
+            const optionNouvelle = document.createElement('option');
+            optionNouvelle.value = '__nouvelle__';
+            optionNouvelle.textContent = '+ Ajouter une nouvelle salle';
+            selectSalle.appendChild(optionNouvelle);
+        })
+        .catch(err => console.error('Erreur chargement salles:', err));
+});
+
+document.getElementById('select-salle').addEventListener('change', function () {
+    const inputNouvelleSalle = document.getElementById('nouvelle-salle');
+    if (this.value === '__nouvelle__') {
+        inputNouvelleSalle.style.display = 'block';
+        inputNouvelleSalle.focus();
+    } else {
+        inputNouvelleSalle.style.display = 'none';
+        inputNouvelleSalle.value = '';
+    }
+});
 </script>
 {% endblock %}

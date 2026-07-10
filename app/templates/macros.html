@@ -1,0 +1,14 @@
+{% macro protected(permission) %}
+    {% if can(permission) %}
+        {{ caller() }}
+    {% else %}
+        <div class="position-relative">
+            <div style="filter: blur(4px); pointer-events: none; opacity: 0.6;">
+                {{ caller() }}
+            </div>
+            <div class="position-absolute top-50 start-50 translate-middle">
+                <i class="bi bi-lock-fill fs-3 text-secondary"></i>
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}

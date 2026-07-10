@@ -113,12 +113,16 @@ async def create_equipement(
     salle: str = Form(),
     commentaire: str = Form(default=""),
     nouvelle_categorie: str = Form(default=""),
+    nouvelle_salle: str = Form(default=""),
     ):
     existing = session.exec(select(Equipement).where(Equipement.numero_serie == numero_serie)).first()
     if existing:
         raise HTTPException(status_code=404, detail="Ce numéro série est déjà enregistré")
     if nouvelle_categorie:
         categorie = nouvelle_categorie
+    if salle == "__nouvelle__" and nouvelle_salle:
+        salle = nouvelle_salle
+
     #recréer l'objet
     equipement = Equipement(
         nom=nom,
@@ -173,11 +177,17 @@ async def change_equipement(
     date_installation: date = Form(),
     etat: str = Form(),
     salle: str = Form(),
-    commentaire: str = Form()
+    commentaire: str = Form(),
+    nouvelle_categorie: str = Form(default=""),
+    nouvelle_salle: str = Form(default=""),
 ):
         equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()
         if not equipement:
             raise HTTPException(status_code=404, detail="Ce numéro série n'existe pas")
+        if nouvelle_categorie:
+            categorie = nouvelle_categorie
+        if salle == "__nouvelle__" and nouvelle_salle:
+            salle = nouvelle_salle
         try:
             equipement.nom=nom
             equipement.lieu=lieu

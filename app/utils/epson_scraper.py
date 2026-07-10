@@ -30,7 +30,6 @@ def verifier_garantie_epson(serial_number):
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
             'referer': 'https://warrantycheck.epson.eu/'
         },
-        verify=False
     )
 
     soup_post = BeautifulSoup(response_post.text, 'html.parser')

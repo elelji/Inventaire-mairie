@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Sécurité — 2FA{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Réutilisation du style tech-panel */
+    .security-panel {
+        background: #ffffff;
+        border: 1px solid rgba(67, 56, 192, 0.15);
+        border-radius: 16px 4px; /* Signature visuelle */
+        box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.05);
+        padding: 2rem;
+    }
+    .qr-container {
+        border: 2px solid #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        background: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="security-panel text-center">
+                <h4 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock" style="color: #4338ca;"></i> Authentification 2FA</h4>
+
+                {% if totp_active %}
+                    <div class="alert alert-success border-0" style="background: #def7ec; color: #03543f;">
+                        <i class="bi bi-check-circle-fill"></i> La protection 2FA est active.
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-4">
+                        Scannez ce QR code avec une application TOTP (Google Auth, Authy...), puis validez avec le code généré.
+                    </p>
+
+                    <div class="qr-container mb-4">
+                        <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="img-fluid">
+                    </div>
+
+                    {% if erreur %}
+                    <div class="alert alert-danger border-0 small py-2">{{ erreur }}</div>
+                    {% endif %}
+                    
+                    <form method="post" action="/activer-2fa-app/confirmer">
+                        <div class="mb-3">
+                            <input type="text" class="form-control form-control-lg text-center fw-bold" id="code" name="code"
+                                   maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                                   placeholder="000000" required autofocus
+                                   style="letter-spacing: 0.5em; border: 2px solid #e0e7ff;">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" style="background: #4338ca; border-radius: 8px 2px;">
+                            Confirmer l'activation
+                        </button>
+                    </form>
+                {% endif %}
+
+                <a href="/" class="btn btn-link mt-3 text-muted" style="text-decoration: none; font-size: 0.8rem;">
+                    <i class="bi bi-arrow-left"></i> Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

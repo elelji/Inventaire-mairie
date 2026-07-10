@@ -72,9 +72,12 @@
             <div class="icon-box">
                 <i class="bi bi-shield-check fs-3"></i>
             </div>
-            <h2 class="h5 fw-bold mb-2">Vérification 2FA</h2>
-            <p class="text-muted small mb-4">Un code de sécurité à 6 chiffres a été envoyé à votre adresse email.</p>
-        </div>
+                <h2 class="h5 fw-bold mb-2">Vérification 2FA</h2>
+                    {% if mode_totp %}
+                    <p class="text-muted small mb-4">Entrez le code généré par votre application d'authentification.</p>
+                    {% else %}
+                    <p class="text-muted small mb-4">Un code de sécurité à 6 chiffres a été envoyé à votre adresse email.</p>
+                    {% endif %}        </div>
 
         {% if erreur %}
         <div class="alert alert-danger small py-2 mb-4">{{ erreur }}</div>

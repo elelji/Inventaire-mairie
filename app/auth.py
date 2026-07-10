@@ -42,13 +42,15 @@ def get_current_user(request: Request, session: Session = Depends(get_session)) 
     request.session["last_activity"] = datetime.now().isoformat()
     return session.get(User, user_id)
 
-def require_login(user: Optional[User] = Depends(get_current_user)) -> User:
+def require_login(request: Request, user: Optional[User] = Depends(get_current_user)) -> User:
     if not user or not user.status:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     if user.doit_changer_mdp:
         raise HTTPException(status_code=303, headers={"Location": "/changer-mdp"})
+    if not user.totp_active and request.url.path not in ["/activer-2fa-app", "/activer-2fa-app/confirmer"]:
+        raise HTTPException(status_code=303, headers={"Location": "/activer-2fa-app"})
     return user
-
+    
 def require_admin(user: User = Depends(require_login)) -> User:
     if user.role != Role.administrateur:
         raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
@@ -122,3 +124,4 @@ def generer_mdp_temporaire(destinataire: str) -> str:
         server.login(EMAIL, MOT_DE_PASSE)
         server.sendmail(EMAIL, destinataire, msg.as_string())
     return password
+

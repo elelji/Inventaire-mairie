@@ -13,14 +13,16 @@ from app.utils.consommables import (
     date_fin_estimee_consommable,
 )
 
-
 def get_current_user_for_templates(request: Request):
     user_id = request.session.get("user_id")
     if not user_id:
-        return {"current_user": None}
+        return {"current_user": None, "can": lambda nom: False}
     with Session(engine) as session:
         user = session.get(User, user_id)
-    return {"current_user": user}
+        return {
+            "current_user": user,
+            "can": lambda nom: user.has_perm(nom, session) if user else False
+        }
 
 #creation de mes fichiers de logs
 os.makedirs("app/logs", exist_ok=True)
@@ -64,16 +66,3 @@ templates.env.globals["pourcentage_restant_consommable"] = pourcentage_restant_c
 templates.env.globals["statut_consommable"] = statut_consommable
 templates.env.globals["date_fin_estimee_consommable"] = date_fin_estimee_consommable
 
-def get_auth_context(request: Request, session: Session = Depends(get_session)) -> dict:
-    """Prépare le contexte global (Request, Utilisateur, Permissions) pour les templates."""
-    user_id = request.session.get("user_id")
-    user = None
-    
-    if user_id:
-        user = session.get(User, user_id)
-        
-    return {
-        "request": request,
-        "current_user": user,
-        "can": lambda nom: user.has_perm(nom, session) if user else False
-    }

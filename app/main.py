@@ -7,7 +7,7 @@ from datetime import date
 from fastapi import FastAPI, Request, Form, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from .route import equipement, auth, admin, corbeille, lieux, export, manageengine, garantie, user, consommable
+from .route import equipement, auth, admin, corbeille, lieux, export, manageengine, garantie, user, consommable, script
 from app.models import Equipement, Garantie, Consommable, Historique, User, Lieu
 from sqlmodel import Field, SQLModel, create_engine, Session, select, func
 from app.dependencies import templates, get_session, engine, logger
@@ -41,6 +41,8 @@ app.include_router(garantie.router)
 app.include_router(manageengine.router)
 app.include_router(corbeille.router)
 app.include_router(consommable.router)
+app.include_router(script.router)
+
 
 #FONCTION UTILITAIRE POUR METTRE LES CADENAS ET FLOUTTE SI PAS LES PERM
 def get_template_context(request: Request, session: Session, user: User = None):

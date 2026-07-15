@@ -67,7 +67,7 @@ async def read_equipement(equipement_numero_serie: str, request: Request, sessio
 
 #GET /formulaire equipements - afficher le formulaire d'ajt équipement
 @router.get("/create_equipement")
-async def create_equipement(request:Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
+async def create_equipement(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
     categories = session.exec(select(Equipement.categorie).distinct()).all()
     lieux = session.exec(select(Lieu.nom).distinct()).all()
     return templates.TemplateResponse(            
@@ -98,7 +98,6 @@ async def edit_equipement_form(equipement_numero_serie: str, request:Request, se
 #POST /equipements — ajouter un équipement
 @router.post("/create_equipement")
 async def create_equipement(
-    request:Request, 
     current_user: User = Depends(require_permission("ajouter_equipement")), 
     session: Session = Depends(get_session),
     nom: str = Form(),
@@ -156,9 +155,8 @@ async def create_equipement(
     except Exception as exc:
         logger.error(f"Erreur d'enregistrement: {exc}")
         return templates.TemplateResponse(
-            request=request,
-            name="form_equipement",
-            context={}
+            name="form_equipement.html",
+            context={            }
             )
     
 #PUT /equipements/{id} — modifier

@@ -1,3 +1,4 @@
+{% import "macros.html" as ui with context %}
 {% extends "base.html" %}
 {% block title %}{{ equipement.nom }} — Inventaire DSI{% endblock %}
 
@@ -71,10 +72,13 @@
             <i class="bi bi-arrow-left me-1"></i>Retour à la liste
         </a>
     </div>
+    {% call ui.protected('modifier_equipement') %}
     <div class="d-flex gap-2">
         <a href="/edit_equipement/{{ equipement.numero_serie }}" class="btn btn-primary">
             <i class="bi bi-pencil me-1"></i>Modifier
         </a>
+        {% endcall %}
+        {% call ui.protected('supprimer_equipement') %}
         <button type="button" class="btn btn-outline-secondary text-danger border-danger-subtle bg-white"
                 style="transition: all 0.2s;"
                 onmouseover="this.style.backgroundColor='#fde8e8'"
@@ -84,6 +88,7 @@
                 data-serie="{{ equipement.numero_serie }}">
             <i class="bi bi-trash3-fill me-1"></i>Supprimer
         </button>
+        {% endcall %}
     </div>
 </div>
 

@@ -11,11 +11,7 @@ router = APIRouter()
 
 #GET LIEUX - LISTER LES LIEUX
 @router.get("/admin/lieux")
-def voir_lieux(
-    request: Request,
-    current_user: User = Depends(require_login),
-    session: Session = Depends(get_session)
-):
+def voir_lieux(request: Request,current_user: User = Depends(require_login),session: Session = Depends(get_session)):
     query = (
         select(Lieu, func.count(Equipement.id).label("total_equipements"))
         .outerjoin(Equipement, Equipement.lieu == Lieu.nom)
@@ -54,7 +50,7 @@ def ajouter_lieu(
 def renommer_lieu(
     lieu_id: int, 
     nouveau_nom: str = Form(), 
-    current_user: User = Depends(require_permission("modifier_nom_ecole")), 
+    current_user: User = Depends(require_permission("modifier_lieu")), 
     session: Session = Depends(get_session)
 ):
     lieu = session.get(Lieu, lieu_id)

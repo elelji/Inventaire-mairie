@@ -1,3 +1,4 @@
+{% import "macros.html" as ui with context %}
 {% extends "base.html" %}
 
 {% block title %}Gestion des Sites — Inventaire DSI{% endblock %}
@@ -77,7 +78,8 @@
                 <div class="load-stat">{{ item.total }}</div>
                 <div class="load-label">Équipements en parc</div>
             </div>
-
+            
+            {% call ui.protected('modifier_lieu') %}
             <div class="d-flex gap-2 mt-3">
                 <button type="submit" class="btn btn-indigo flex-grow-1">MODIFIER</button>
                 <button type="button" class="btn btn-red"
@@ -86,10 +88,12 @@
                     <i class="bi bi-trash3-fill"></i>
                 </button>
             </div>
+            {% endcall %}
         </form>
     </div>
     {% endfor %}
 
+    {% call ui.protected('ajouter_ecole') %}
     <div class="site-card d-flex flex-column justify-content-center align-items-center" style="border: 2px dashed var(--tech-border); background: #fcfcfc;">
         <form method="post" action="/admin/lieux/ajouter" class="text-center w-100">
             <i class="bi bi-plus-circle-fill text-muted" style="font-size: 2.5rem;"></i>
@@ -97,5 +101,6 @@
             <button type="submit" class="btn btn-indigo w-100 mt-3">CRÉER LE SITE</button>
         </form>
     </div>
+    {% endcall %}
 </div>
 {% endblock %}

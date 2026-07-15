@@ -1,8 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="fw-bold" style="color:#4338ca;">Une erreur est survenue</h1>
-    <p class="text-muted">Le problème a été enregistré. Réessayez plus tard ou contactez l'administrateur.</p>
-    <a href="/" class="btn btn-primary" style="background:#4338ca;">Retour à l'accueil</a>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh; padding: 20px;">
+    
+    <div class="text-center p-5" style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); max-width: 500px; width: 100%;">
+        
+        <div style="font-size: 3.5rem; color: #4f46e5; margin-bottom: 20px;">
+            <i class="bi bi-shield-x"></i>
+        </div>
+
+        <h1 class="fw-bold" style="color: #1e1b4b; margin-bottom: 15px;">Accès au Cockpit restreint</h1>
+        
+        <p class="text-muted" style="margin-bottom: 30px; line-height: 1.6;">
+            Le système a rencontré une anomalie ou vous n'avez pas les autorisations nécessaires pour accéder à cette zone.
+        </p>
+
+        <a href="/" class="btn" style="background-color: #4f46e5; color: #ffffff; padding: 12px 30px; border-radius: 8px; font-weight: 600; transition: background 0.3s;">
+            Retour au Tableau de Bord
+        </a>
+    </div>
 </div>
 {% endblock %}

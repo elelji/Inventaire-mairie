@@ -1,3 +1,4 @@
+{% import "macros.html" as ui with context %}
 {% extends "base.html" %}
 
 {% block title %}Export Données — Inventaire DSI{% endblock %}
@@ -254,6 +255,7 @@
         </div>
 
         <!-- COCKPIT COMPILATION & TRIGGERS (DROITE) -->
+         {% call ui.protected('generer_pdf') %}
         <div class="action-control-panel">
             <div class="section-title">Paramètres de sortie</div>
             
@@ -293,6 +295,7 @@
             </div>
 
         </div>
+        {% endcall %}
 
     </div>
 </form>

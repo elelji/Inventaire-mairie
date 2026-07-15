@@ -3,9 +3,9 @@ from app.dependencies import engine
 from app.models import Permission
 
 PERMISSIONS_PAR_DEFAUT = [
-    ("ajouter_ecole", "Ajouter une nouvelle école"),
+    ("modifier_lieu", "Modifier une école"),
+    ("ajouter_ecole", "Ajouter une école"),
     ("creer_nouvel_utilisateur", "Créer un nouvel utilisateur ")
-    ("modifier_nom_ecole", "Modifier le nom d'une école"),
     ("generer_pdf", "Générer un PDF"),
     ("ajouter_equipement", "Ajouter un équipement"),
     ("modifier_equipement", "Modifier un équipement"),

@@ -1,3 +1,4 @@
+{% import "macros.html" as ui with context %}
 {% extends "base.html" %}
 {% block title %}Tableau de bord — Inventaire DSI{% endblock %}
 
@@ -322,9 +323,11 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="section-title mb-0"><i class="bi bi-droplet-fill"></i> Suivi des Consommables</div>
+                {% call ui.protected('creer_consommable') %}
                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAjoutConsommable">
                     <i class="bi bi-plus-lg"></i>
                 </button>
+                {% endcall %}
             </div>
             <div class="consumable-grid">
                 {% for c in consommables %}

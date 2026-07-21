@@ -13,7 +13,6 @@ def verifier_garantie_epson(serial_number):
     response = session.get(
         'https://warrantycheck.epson.eu/',
         headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'},
-        verify=False
     )
     soup = BeautifulSoup(response.text, 'html.parser')
     token = soup.find("input", attrs={"name": "__RequestVerificationToken"}).get("value")

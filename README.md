@@ -16,13 +16,12 @@ Fermer simplement la fenêtre qui s'est ouverte (la croix). L'application s'arr�
 
 Depuis le PC qui héberge l'application : `http://localhost`
 
-Depuis un autre poste du réseau : `http://[IP_A_COMPLETER]`
-*(à compléter une fois l'adresse IP fixe du PC hôte connue — demander à la DSI si besoin de la fixer)*
+Depuis un autre poste du réseau : `http://192.168.16.1`
 
 ## 3. Sauvegarder la base de données
 
 Toutes les données sont stockées dans un seul fichier :
-[chemin_du_projet]/app/database.db
+Stage/app/database.db
 
 **Recommandation :** copier ce fichier régulièrement (ex: une fois par semaine) vers un autre emplacement (clé USB, dossier partagé) pour éviter toute perte de données en cas de problème sur le PC.
 

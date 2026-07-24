@@ -1,8 +1,8 @@
 import os
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Request, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from app.models import Equipement
+from app.models import Equipement, Historique
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from typing import Optional
 from app.dependencies import templates, get_session, logger
@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from datetime import date
 
 router = APIRouter()
+load_dotenv()
+
 
 class Poste(BaseModel):
     numero_serie: str
@@ -60,6 +62,8 @@ def script( poste: Poste, request: Request, session: Session = Depends(get_sessi
         existing.modele = poste.modele
         existing.version_os = poste.version_os
         existing.usager = poste.usager  
+        existing.lieu = poste.lieu
+        existing.salle = poste.salle
         session.add(existing)
         session.commit()
         historique = Historique(
@@ -68,7 +72,7 @@ def script( poste: Poste, request: Request, session: Session = Depends(get_sessi
             action = "Mise à jour automatique",
             utilisateur = "Agent réseau",
             commentaire = "Créé via script d'inventaire automatique",
-            nom_equipement = existing.nom
+            nom_equipement = existing.nom,
         )
         session.add(historique)
         session.commit()

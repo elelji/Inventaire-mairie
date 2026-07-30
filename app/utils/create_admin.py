@@ -17,3 +17,4 @@ with Session(engine) as session:
     session.commit()
 
 print("Admin créé.")
+

@@ -81,10 +81,12 @@ PORT: int = 587
 EMAIL: str = os.getenv('EMAIL_DSI')
 MOT_DE_PASSE: str = os.getenv('EMAIL_DSI_MOT_DE_PASSE')
 
+APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8000")
+
 def envoyer_url(destinataire: str) -> str:
     token = secrets.token_urlsafe(32)
     #construction de l'email
-    msg = MIMEText(f"Voici le lien vous permettant de modifier votre mot de passe : http://localhost:8000/reset-mdp/{token}")
+    msg = MIMEText(f"Voici le lien vous permettant de modifier votre mot de passe : {APP_BASE_URL}/reset-mdp/{token}")
     msg["Subject"] = "Mot de passe oublié — Inventaire DSI"
     msg["From"] = EMAIL
     msg["To"] = destinataire

@@ -1,4 +1,5 @@
 import os
+import secrets
 from fastapi import APIRouter, Depends, Header, Request, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -27,7 +28,7 @@ class Poste(BaseModel):
 
 @router.post('/script')
 def script( poste: Poste, request: Request, session: Session = Depends(get_session), x_api_key: str = Header(...)):
-    if x_api_key != os.getenv("AGENT_API_KEY"):
+    if not secrets.compare_digest(x_api_key, os.getenv("AGENT_API_KEY", "")):
         raise HTTPException(status_code=403, detail="pas la bonne clée")
     existing = session.exec(select(Equipement).where(Equipement.numero_serie == poste.numero_serie)).first()
     if not existing:

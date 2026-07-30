@@ -23,8 +23,8 @@ async def corbeille(request:Request, current_user: User = Depends(require_permis
 
 #POST /restaurer-equipements : restauration
 @router.post('/restaurer-equipements/{equipement_numero_serie}')
-async def restaurer_equipements(equipement_numero_serie: str, request:Request, session: Session = Depends(get_session),):
-    equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()  
+async def restaurer_equipements(equipement_numero_serie: str, request:Request, current_user: User = Depends(require_permission("acces_corbeille")), session: Session = Depends(get_session),):
+    equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()
     if not equipement:
         raise HTTPException(status_code=404, detail="Équipement introuvable")
     equipement.dans_corbeille = False
@@ -36,7 +36,7 @@ async def restaurer_equipements(equipement_numero_serie: str, request:Request, s
 
 #POST /supprimer définitivement
 @router.post("/supprimer_definitif/{equipement_numero_serie}")
-async def supprimer_definitif(equipement_numero_serie: str, request: Request, session: Session = Depends(get_session)):
+async def supprimer_definitif(equipement_numero_serie: str, request: Request, current_user: User = Depends(require_permission("supprimer_equipement")), session: Session = Depends(get_session)):
     equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()
     if not equipement:
         raise HTTPException(status_code=404, detail="Équipement introuvable")

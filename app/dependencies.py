@@ -50,7 +50,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sqlite_file_name = os.path.join(BASE_DIR, "database.db")
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-engine = create_engine(sqlite_url, echo=True)
+sql_echo = os.getenv("SQL_ECHO", "false").lower() == "true"
+engine = create_engine(sqlite_url, echo=sql_echo)
 
 def get_session():
     with Session(engine) as session:

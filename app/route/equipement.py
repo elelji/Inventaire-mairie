@@ -48,7 +48,7 @@ async def equipement(request:Request, current_user: User = Depends(require_login
 
 #GET /equipements/{id} — voir un équipement
 @router.get("/equipement/{equipement_numero_serie}")
-async def read_equipement(equipement_numero_serie: str, request: Request, session: Session = Depends(get_session)):
+async def read_equipement(equipement_numero_serie: str, request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
     equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()
     if not equipement:
         raise HTTPException(status_code=404, detail="Ce numéro série n'existe pas")
@@ -81,7 +81,7 @@ async def create_equipement(request: Request, current_user: User = Depends(requi
 
 #GET /formulaire equipements - afficher le formulaire de modification
 @router.get("/edit_equipement/{equipement_numero_serie}")
-async def edit_equipement_form(equipement_numero_serie: str, request:Request, session: Session = Depends(get_session)):
+async def edit_equipement_form(equipement_numero_serie: str, request:Request, current_user: User = Depends(require_login), session: Session = Depends(get_session)):
     equipement = session.exec(select(Equipement).where(Equipement.numero_serie == equipement_numero_serie)).first()
     categories = session.exec(select(Equipement.categorie).distinct()).all()
     lieux = session.exec(select(Lieu.nom).distinct()).all()
@@ -271,7 +271,7 @@ async def history(request: Request, current_user: User = Depends(require_login),
     )
 
 @router.get("/api/search")
-def search_bar(request: Request, session: Session = Depends(get_session), q: str = ""):
+def search_bar(request: Request, current_user: User = Depends(require_login), session: Session = Depends(get_session), q: str = ""):
     mots = q.split()
     statement = select(Equipement).where(Equipement.dans_corbeille == False)
     for mot in mots:

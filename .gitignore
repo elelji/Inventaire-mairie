@@ -9,3 +9,6 @@ notes.md
 prompt.md
 deploiement.md
 script.md
+app/logs/
+*.log
+*.AppImage

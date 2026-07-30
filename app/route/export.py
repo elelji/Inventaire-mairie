@@ -40,7 +40,7 @@ async def export_page(request: Request, current_user: User = Depends(require_log
 
 #GET / TRI SALLES
 @router.get("/api/salles")
-async def get_salles(lieux: list[str] = Query(default=[]), session: Session = Depends(get_session)):
+async def get_salles(current_user: User = Depends(require_login), lieux: list[str] = Query(default=[]), session: Session = Depends(get_session)):
     query = select(Equipement.salle, func.count(Equipement.id)).group_by(Equipement.salle)
     if lieux:
         query = query.where(Equipement.lieu.in_(lieux))
@@ -50,6 +50,7 @@ async def get_salles(lieux: list[str] = Query(default=[]), session: Session = De
 #GET / TRI CATÉGORIES
 @router.get("/api/categorie")
 async def get_cat(
+    current_user: User = Depends(require_login),
     lieux: list[str] = Query(default=[]),
     salles: list[str] = Query(default=[]),
     session: Session = Depends(get_session)
@@ -65,6 +66,7 @@ async def get_cat(
 #GET / TRI MARQUES
 @router.get("/api/marque")
 async def get_marque(
+    current_user: User = Depends(require_login),
     lieux: list[str] = Query(default=[]),
     salles: list[str] = Query(default=[]),
     categories: list[str] = Query(default=[]),
@@ -447,15 +449,15 @@ async def sortie_inventaire_excel(
             e.modele or "",
             e.numero_serie or "",
             e.etat or "",
-            date_formatee
+            date_suppr
         ])
-    
+
         ws.row_dimensions[index].height = 20
         for cell in ws[index]:
             cell.font = font_data
             cell.border = border_data
 
-            if cell.column == 8:  # Date de suppression
+            if cell.column == 9:  # Date de suppression
                 cell.alignment = align_center
             else:
                 cell.alignment = align_left

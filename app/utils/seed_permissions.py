@@ -5,7 +5,7 @@ from app.models import Permission
 PERMISSIONS_PAR_DEFAUT = [
     ("modifier_lieu", "Modifier une école"),
     ("ajouter_ecole", "Ajouter une école"),
-    ("creer_nouvel_utilisateur", "Créer un nouvel utilisateur ")
+    ("creer_nouvel_utilisateur", "Créer un nouvel utilisateur "),
     ("generer_pdf", "Générer un PDF"),
     ("ajouter_equipement", "Ajouter un équipement"),
     ("modifier_equipement", "Modifier un équipement"),

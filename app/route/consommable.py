@@ -58,7 +58,7 @@ def liste_consommables_form(
             )
 
 @router.get('/api/equipement')
-def get_equipement(numero_serie: str = Query(default=""), session: Session = Depends(get_session)):
+def get_equipement(current_user: User = Depends(require_login), numero_serie: str = Query(default=""), session: Session = Depends(get_session)):
     query = select(Equipement.id, Equipement.lieu, Equipement.salle)
     query = query.where(Equipement.numero_serie == numero_serie)
     result = session.exec(query).all()

@@ -32,13 +32,16 @@ copy app\database.db D:\Sauvegardes\database_JJMMAAAA.db
 ## 4. Fichier de configuration sensible (.env)
 
 Le fichier `.env` à la racine du projet contient des informations sensibles :
-- Clé secrète de session
-- Identifiants d'envoi d'email (2FA)
-- Clé API pour l'agent de récupération réseau
+- `SESSION_SECRET_KEY` : clé secrète de session
+- `EMAIL_DSI` / `EMAIL_DSI_MOT_DE_PASSE` : identifiants d'envoi d'email (2FA)
+- `AGENT_API_KEY` : clé API pour l'agent de récupération réseau
+- `APP_BASE_URL` (optionnel) : URL publique de l'application, utilisée dans les emails de réinitialisation de mot de passe (défaut : `http://localhost:8000`)
 
-**Ne jamais partager ce fichier ni le rendre accessible publiquement.**
+**Ne jamais partager ce fichier ni le rendre accessible publiquement, et ne jamais committer une vraie clé dans le code source.**
 
-Si une clé doit être régénérée (ex: la clé API agent), il faudra aussi la mettre à jour dans le script PowerShell déployé sur les postes.
+`script.ps1` (déployé sur les postes) contient un placeholder `REMPLACER_PAR_LA_CLE_API_AGENT` pour `$apiKey` : la vraie valeur ne doit être renseignée que sur les copies déployées localement sur chaque poste, jamais dans le dépôt git.
+
+Si `AGENT_API_KEY` doit être régénérée, il faut la mettre à jour à la fois dans `.env` et dans `$apiKey` sur chaque copie de `script.ps1` déployée sur les postes.
 
 ## 5. Consulter les logs en cas de problème
 

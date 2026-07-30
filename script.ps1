@@ -52,7 +52,10 @@ try {
     $json = $Poste | ConvertTo-Json
 
     # Requête HTTP POST
-    $response = Invoke-RestMethod -Uri "http://localhost:8000/script" -Method Post -Body $json -ContentType "application/json" -Headers @{"X-API-Key" = "__pG40gvRAmqN3D_MGfxoG-UFlShVSBYfLdGGOys9Z0"}
+    # Ne jamais committer la vraie clé ici : elle est renseignée uniquement sur les copies
+    # déployées sur les postes (voir README, section clé API agent).
+    $apiKey = "REMPLACER_PAR_LA_CLE_API_AGENT"
+    $response = Invoke-RestMethod -Uri "http://localhost:8000/script" -Method Post -Body $json -ContentType "application/json" -Headers @{"X-API-Key" = $apiKey}
 
     # Log succès
     Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Succès : $($response.statut) - numero_serie=$numero_serie"

@@ -193,7 +193,7 @@ def changer_mdp(
             request=request, name="changer_mdp.html",
             context={"erreur": "Ancien mot de passe incorrect"}
         )
-    if nouveau_mdp != len(nouveau_mdp) < 8:
+    if len(nouveau_mdp) < 8:
         return templates.TemplateResponse(
             request=request, name="changer_mdp.html",
             context={"erreur": "Le mot de passe doit contenir au moins 8 caractères"}

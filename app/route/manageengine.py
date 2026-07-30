@@ -21,6 +21,7 @@ async def manageengine_page(request: Request, current_user: User = Depends(requi
 @router.post("/manageengine/sync")
 async def manageengine_sync(
     request: Request,
+    current_user: User = Depends(require_login),
     session: Session = Depends(get_session),
     me_url: str = Form(),
     me_apikey: str = Form(),

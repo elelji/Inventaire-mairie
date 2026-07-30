@@ -186,7 +186,7 @@
         
         <div class="d-flex flex-column">
             {% for item in garanties_avec_statut %}
-            <div class="garantie-strip" onclick="window.location='/equipement/{{ item.garantie.equipement.numero_serie }}'">
+            <div class="garantie-strip strip-nav" data-href="/equipement/{{ item.garantie.equipement.numero_serie | urlencode }}">
                 
                 <!-- 1. Barre d'état latérale -->
                 <div class="critic-bar {% if item.statut == 'expiré' %}danger{% elif item.statut == 'bientôt' %}warning{% else %}success{% endif %}"></div>
@@ -287,4 +287,12 @@
 
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.strip-nav').forEach(el => {
+        el.addEventListener('click', () => { window.location = el.dataset.href; });
+    });
+</script>
 {% endblock %}

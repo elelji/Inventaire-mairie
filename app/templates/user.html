@@ -33,7 +33,7 @@
             <span class="badge mb-3" style="background: #ede9fe; color: #4338ca; border-radius: 8px; border: 1px solid #c4b5fd;">{{ u.role.value }}</span>
             
             <div class="d-flex justify-content-center gap-2 mt-2">
-                <button class="btn btn-sm btn-outline-primary border-0" style="background: #f5f3ff;" onclick="openEditModal('{{ u.id }}', '{{ u.email }}', '{{ u.role.value }}')" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                <button class="btn btn-sm btn-outline-primary border-0 btn-edit-user" style="background: #f5f3ff;" data-id="{{ u.id }}" data-email="{{ u.email }}" data-role="{{ u.role.value }}" data-bs-toggle="modal" data-bs-target="#editUserModal">
                     <i class="bi bi-pencil"></i> Modifier
                 </button>
                 <form method="post" action="/admin/utilisateurs/delete/{{ u.id }}">
@@ -68,10 +68,12 @@
 </style>
 
 <script>
-    function openEditModal(id, email, role) {
-        document.getElementById('editUserForm').action = '/admin/utilisateurs/modifier/' + id;
-        document.getElementById('edit_email').value = email;
-        document.getElementById('edit_role').value = role;
-    }
+    document.querySelectorAll('.btn-edit-user').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('editUserForm').action = '/admin/utilisateurs/modifier/' + btn.dataset.id;
+            document.getElementById('edit_email').value = btn.dataset.email;
+            document.getElementById('edit_role').value = btn.dataset.role;
+        });
+    });
 </script>
 {% endblock %}

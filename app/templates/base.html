@@ -167,16 +167,43 @@ inputRecherche.addEventListener('input', () => {
         });
 
         function afficherResultats(data) {
-            let html = '';
+            const conteneur = document.getElementById('resultatsRecherche');
+            conteneur.innerHTML = '';
+
             if (data.equipements?.length) {
-                html += `<div class="px-3 py-2 small fw-bold text-primary">ÉQUIPEMENTS</div>`;
+                const titre = document.createElement('div');
+                titre.className = 'px-3 py-2 small fw-bold text-primary';
+                titre.textContent = 'ÉQUIPEMENTS';
+                conteneur.appendChild(titre);
+
                 data.equipements.forEach(e => {
-                    html += `<a href="/equipement/${e.numero_serie}" class="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none">
-                        <i class="bi bi-display"></i><div><div class="fw-bold text-dark">${e.nom}</div><small class="text-muted">${e.categorie}</small></div>
-                    </a>`;
+                    const lien = document.createElement('a');
+                    lien.href = `/equipement/${encodeURIComponent(e.numero_serie)}`;
+                    lien.className = 'd-flex align-items-center gap-3 px-3 py-2 text-decoration-none';
+
+                    const icone = document.createElement('i');
+                    icone.className = 'bi bi-display';
+
+                    const bloc = document.createElement('div');
+                    const nom = document.createElement('div');
+                    nom.className = 'fw-bold text-dark';
+                    nom.textContent = e.nom;
+                    const categorie = document.createElement('small');
+                    categorie.className = 'text-muted';
+                    categorie.textContent = e.categorie;
+                    bloc.appendChild(nom);
+                    bloc.appendChild(categorie);
+
+                    lien.appendChild(icone);
+                    lien.appendChild(bloc);
+                    conteneur.appendChild(lien);
                 });
+            } else {
+                const vide = document.createElement('div');
+                vide.className = 'text-center p-3 text-muted';
+                vide.textContent = 'Aucun résultat';
+                conteneur.appendChild(vide);
             }
-            document.getElementById('resultatsRecherche').innerHTML = html || '<div class="text-center p-3 text-muted">Aucun résultat</div>';
         }
     </script>
     {% block extra_js %}{% endblock %}

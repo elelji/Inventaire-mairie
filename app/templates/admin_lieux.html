@@ -84,7 +84,7 @@
                 <button type="submit" class="btn btn-indigo flex-grow-1">MODIFIER</button>
                 <button type="button" class="btn btn-red"
                     data-bs-toggle="modal" data-bs-target="#modalSuppression"
-                    onclick="prepareSuppression('{{ item.lieu.id }}', '{{ item.lieu.nom }}')">
+                    data-lieu-id="{{ item.lieu.id }}" data-lieu-nom="{{ item.lieu.nom }}">
                     <i class="bi bi-trash3-fill"></i>
                 </button>
             </div>

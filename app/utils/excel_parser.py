@@ -88,12 +88,3 @@ def import_excel(filepath: str, session: Session):
             
         # On commit à la fin de chaque feuille pour valider les données sereinement
         session.commit()
-
-if __name__ == "__main__":
-    from app.dependencies import engine
-
-    filepath = "app/database/inventaire.xlsx"
-
-    with Session(engine) as session:
-        import_excel(filepath, session)
-        print("Import terminé.")

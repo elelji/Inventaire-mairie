@@ -7,7 +7,7 @@ from datetime import date
 from fastapi import FastAPI, Request, Form, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from .route import equipement, auth, admin, corbeille, lieux, export, manageengine, garantie, user, consommable, script
+from .routes import equipement, auth, admin, corbeille, lieux, export, manageengine, garantie, user, consommable, script
 from app.models import Equipement, Garantie, Consommable, Historique, User, Lieu
 from sqlmodel import Field, SQLModel, create_engine, Session, select, func
 from app.dependencies import templates, get_session, engine, logger

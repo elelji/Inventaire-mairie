@@ -43,6 +43,8 @@ def create_user(
     email: str = Form(),
     role: str = Form(),
 ):
+    if role == Role.administrateur.value and current_user.role != Role.administrateur:
+        raise HTTPException(status_code=403, detail="Seul un administrateur peut créer un compte administrateur")
     existing = session.exec(select(User).where(User.email == email)).first()
     if existing:
         raise HTTPException(status_code=404, detail="Cet utilisateur est déjà enregistré")
@@ -67,20 +69,6 @@ def create_user(
         context={}
     )
 
-@router.get("/admin/utilisateurs/modifier/{user_id}")
-def edit_user(
-    user_id: int,
-    request: Request,
-    current_user: User = Depends(require_permission("modifier_utilisateur")),
-    session: Session = Depends(get_session),
-):
-    user = session.exec(select(User).where(User.id == user_id)).first()
-    return templates.TemplateResponse(            
-        request=request,
-        name="form_user.html",                         
-        context={"user":user,"roles": list(Role)}
-    )
-
 @router.post("/admin/utilisateurs/modifier/{user_id}")
 def edit_user(
     user_id: int,
@@ -90,6 +78,8 @@ def edit_user(
     email: str = Form(),
     role: str = Form(),
 ):
+    if role == Role.administrateur.value and current_user.role != Role.administrateur:
+        raise HTTPException(status_code=403, detail="Seul un administrateur peut assigner le rôle administrateur")
     user = session.exec(select(User).where(User.id == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Cet utilisateur n'existe pas")

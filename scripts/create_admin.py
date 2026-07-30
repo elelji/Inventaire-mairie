@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from sqlmodel import Session
 from app.dependencies import engine
 from app.models import User, Role
@@ -17,4 +21,3 @@ with Session(engine) as session:
     session.commit()
 
 print("Admin créé.")
-

@@ -166,17 +166,6 @@ inputRecherche.addEventListener('input', () => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); btnRecherche.click(); }
         });
 
-        // 3. Logique de recherche
-        timeout = setTimeout(async () => {
-    console.log("Recherche :", q);
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-    console.log("Status :", res.status);
-    const text = await res.text();
-    console.log("Réponse :", text);
-    const data = JSON.parse(text);
-    afficherResultats(data);
-}, 250);
-
         function afficherResultats(data) {
             let html = '';
             if (data.equipements?.length) {

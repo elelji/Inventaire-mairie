@@ -1,13 +1,17 @@
+import os
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
+import requests
 from app.models import User
 from app.dependencies import templates, get_session, engine, logger
-from app.auth import require_permission, require_login
+from app.auth import require_permission, require_login, require_admin
 
 
 router = APIRouter()
+
+MANAGEENGINE_VERIFY_SSL = os.getenv("MANAGEENGINE_VERIFY_SSL", "true").lower() != "false"
 
 # Test projet ManageEngine
 @router.get("/manageengine", response_class=HTMLResponse)
@@ -21,19 +25,18 @@ async def manageengine_page(request: Request, current_user: User = Depends(requi
 @router.post("/manageengine/sync")
 async def manageengine_sync(
     request: Request,
-    current_user: User = Depends(require_login),
+    current_user: User = Depends(require_admin),
     session: Session = Depends(get_session),
     me_url: str = Form(),
     me_apikey: str = Form(),
 ):
     try:
-        import requests as req
         # Test de connexion
-        response = req.get(
+        response = requests.get(
             f"{me_url}/api/v3/assets",
             headers={"authtoken": me_apikey},
             timeout=5,
-            verify=False
+            verify=MANAGEENGINE_VERIFY_SSL
         )
         if response.status_code == 200:
             data = response.json()

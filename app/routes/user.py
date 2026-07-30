@@ -6,6 +6,7 @@ from app.dependencies import get_session, templates, logger
 from app.models import User
 from app.auth import require_permission, hash_password, get_current_user, generer_mdp_temporaire
 from app.models import Role, LogConnexion
+import smtplib
 
 router = APIRouter()
 
@@ -48,7 +49,11 @@ def create_user(
     existing = session.exec(select(User).where(User.email == email)).first()
     if existing:
         raise HTTPException(status_code=404, detail="Cet utilisateur est déjà enregistré")
-    password = generer_mdp_temporaire(email)
+    try:
+        password = generer_mdp_temporaire(email)
+    except smtplib.SMTPException as exc:
+        logger.error(f"Échec d'envoi de l'email de bienvenue pour {email}: {exc}")
+        raise HTTPException(status_code=503, detail="Le service d'envoi d'email est momentanément indisponible. Contactez l'administrateur système.")
     password_hash = hash_password(password)
     user = User(
         email=email,

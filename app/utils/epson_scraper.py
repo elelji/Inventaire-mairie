@@ -13,6 +13,7 @@ def verifier_garantie_epson(serial_number):
     response = session.get(
         'https://warrantycheck.epson.eu/',
         headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'},
+        timeout=10,
     )
     soup = BeautifulSoup(response.text, 'html.parser')
     token = soup.find("input", attrs={"name": "__RequestVerificationToken"}).get("value")
@@ -29,6 +30,7 @@ def verifier_garantie_epson(serial_number):
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
             'referer': 'https://warrantycheck.epson.eu/'
         },
+        timeout=10,
     )
 
     soup_post = BeautifulSoup(response_post.text, 'html.parser')

@@ -13,6 +13,7 @@ import pyotp
 import qrcode
 import io
 import base64
+import smtplib
 
 router = APIRouter()
 
@@ -221,7 +222,14 @@ def reset_mdp(request: Request, session: Session = Depends(get_session), email: 
             request=request, name="reset_mdp.html",
             context={"succès":"Si cet email existe, un lien vous a été envoyé"}
         )
-    token = envoyer_url(user.email)
+    try:
+        token = envoyer_url(user.email)
+    except smtplib.SMTPException as exc:
+        logger.error(f"Échec d'envoi de l'email de réinitialisation pour {user.email}: {exc}")
+        return templates.TemplateResponse(
+            request=request, name="reset_mdp.html",
+            context={"erreur": "Le service d'envoi d'email est momentanément indisponible. Contactez l'administrateur système."}
+        )
     user.reset_token = token
     user.reset_token_expiration = datetime.now() + timedelta(minutes=30)
     session.add(user)

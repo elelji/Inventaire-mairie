@@ -35,5 +35,17 @@ if errorlevel 1 (
     timeout /t 30 /nobreak >nul
 )
 
+if not exist ".env" (
+    echo ERREUR : le fichier .env est introuvable a la racine du projet.
+    echo Cree-le avant de lancer l'application ^(voir le README, section 4^).
+    pause
+    exit /b 1
+)
+
+if not exist "app\database.db" (
+    echo Premier lancement : creation du fichier de base de donnees vide...
+    type nul > app\database.db
+)
+
 start /min cmd /c "timeout /t 15 && start http://localhost"
 docker compose up

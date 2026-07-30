@@ -25,5 +25,16 @@ if ! sudo docker info &> /dev/null; then
     sudo systemctl start docker
 fi
 
+if [ ! -f .env ]; then
+    echo "ERREUR : le fichier .env est introuvable à la racine du projet."
+    echo "Créez-le avant de lancer l'application (voir le README, section 4)."
+    exit 1
+fi
+
+if [ ! -f app/database.db ]; then
+    echo "Premier lancement : création du fichier de base de données vide..."
+    touch app/database.db
+fi
+
 (sleep 15 && xdg-open http://localhost) &
 sudo docker compose up

@@ -103,7 +103,7 @@
                     <tr class="align-middle"><th class="text-muted fw-semibold">Marque</th><td class="fw-medium">{{ equipement.marque }}</td></tr>
                     <tr class="align-middle"><th class="text-muted fw-semibold">Modèle</th><td class="fw-medium">{{ equipement.modele }}</td></tr>
                     <tr class="align-middle"><th class="text-muted fw-semibold">N° de série</th><td><span class="badge bg-light text-dark border font-monospace fs-6">{{ equipement.numero_serie }}</span></td></tr>
-                    <tr class="align-middle"><th class="text-muted fw-semibold">Date d'installation</th><td class="fw-medium">{{ equipement.date_installation }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Date d'installation</th><td class="fw-medium">{{ equipement.date_installation.strftime('%d/%m/%Y') if equipement.date_installation else "Non renseignée" }}</td></tr>
                     <tr class="align-middle">
                         <th class="text-muted fw-semibold">État</th>
                         <td>
@@ -127,8 +127,8 @@
             <div class="card-body p-4">
                 <table class="table table-sm table-borderless mb-0">
                     <tr class="align-middle"><th style="width:40%" class="text-muted fw-semibold">Lieu / École</th><td class="fw-medium">{{ equipement.lieu }}</td></tr>
-                    <tr class="align-middle"><th class="text-muted fw-semibold">Salle</th><td><code class="text-dark fw-bold">{{ equipement.salle }}</code></td></tr>
-                    <tr class="align-middle"><th class="text-muted fw-semibold">Usager</th><td class="fw-medium">{{ equipement.usager }}</td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Salle</th><td><code class="text-dark fw-bold">{{ equipement.salle or "Non renseignée" }}</code></td></tr>
+                    <tr class="align-middle"><th class="text-muted fw-semibold">Usager</th><td class="fw-medium">{{ equipement.usager or "Non renseigné" }}</td></tr>
                 </table>
             </div>
         </div>

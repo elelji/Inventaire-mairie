@@ -5,6 +5,7 @@ from app.models import Equipement, Historique, User
 from sqlmodel import Session, select
 from app.dependencies import templates, get_session, engine, logger
 from app.auth import require_permission, require_login
+from datetime import date
 
 router = APIRouter()
 
@@ -29,6 +30,15 @@ async def restaurer_equipements(equipement_numero_serie: str, request:Request, c
         raise HTTPException(status_code=404, detail="Équipement introuvable")
     equipement.dans_corbeille = False
     session.add(equipement)
+    historique = Historique(
+        equipement_id=equipement.id,
+        date_action=date.today(),
+        action="Restauration",
+        utilisateur=current_user.email,
+        commentaire="",
+        nom_equipement=equipement.nom
+    )
+    session.add(historique)
     session.commit()
     return RedirectResponse(url="/corbeille", status_code=303)
 

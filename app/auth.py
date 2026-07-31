@@ -77,22 +77,67 @@ def require_permission(nom_permission: str):
 #A2FA
 #constantes de conf smtp
 HOST: str = "smtp.gmail.com"
-PORT: int = 587
+PORT: int = 465
 EMAIL: str = os.getenv('EMAIL_DSI')
 MOT_DE_PASSE: str = os.getenv('EMAIL_DSI_MOT_DE_PASSE')
-
-APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8000")
+BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost")
 
 def envoyer_url(destinataire: str) -> str:
     token = secrets.token_urlsafe(32)
     #construction de l'email
-    msg = MIMEText(f"Voici le lien vous permettant de modifier votre mot de passe : {APP_BASE_URL}/reset-mdp/{token}")
+    lien = f"{BASE_URL}/reset-mdp/{token}"
+    html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                
+                <h2 style="color: #4338CA;">
+                    Inventaire DSI - Réinitialisation du mot de passe
+                </h2>
+
+                <p>Bonjour,</p>
+
+                <p>
+                    Une demande de réinitialisation de votre mot de passe a été effectuée.
+                </p>
+
+                <p>
+                    Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :
+                </p>
+
+                <div style="text-align: center; margin: 30px;">
+                    <a href="{lien}" 
+                       style="background-color: #4338CA; color: white; 
+                       padding: 12px 20px; text-decoration: none; 
+                       border-radius: 5px;">
+                        Réinitialiser mon mot de passe
+                    </a>
+                </div>
+
+                <p>
+                    Ce lien est valable pendant <b>30 minutes</b>.
+                </p>
+
+                <p>
+                    Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.
+                </p>
+
+                <hr>
+
+                <p style="font-size: 12px; color: #777;">
+                    Message automatique envoyé par l'application Inventaire DSI.
+                </p>
+
+            </div>
+        </body>
+    </html>
+    """
+    msg = MIMEText(html, "html")
     msg["Subject"] = "Mot de passe oublié — Inventaire DSI"
     msg["From"] = EMAIL
     msg["To"] = destinataire
     #evoie du message
-    with smtplib.SMTP(HOST,PORT) as server:
-        server.starttls()
+    with smtplib.SMTP_SSL(HOST,PORT) as server:
         server.login(EMAIL, MOT_DE_PASSE)
         server.sendmail(EMAIL, destinataire, msg.as_string())
     return token 
@@ -102,13 +147,61 @@ def envoyer_code_2fa(destinataire: str) -> str:
     #code 6 chiffre générer
     code = str(random.randint(100000, 999999))
     #construction de l'email
-    msg = MIMEText(f"Voici votre code de connexion {code}")
+    html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+
+                <h2 style="color: #4338CA;">
+                    Inventaire DSI - Code de connexion
+                </h2>
+
+                <p>Bonjour,</p>
+
+                <p>
+                    Une tentative de connexion nécessite une vérification supplémentaire.
+                </p>
+
+                <p>
+                    Voici votre code de sécurité :
+                </p>
+
+                <div style="
+                    text-align: center;
+                    margin: 30px;
+                    font-size: 32px;
+                    font-weight: bold;
+                    letter-spacing: 8px;
+                    color: #4338CA;
+                ">
+                    {code}
+                </div>
+
+                <p>
+                    Ce code est valable pendant quelques minutes.
+                </p>
+
+                <p>
+                    Si vous n'êtes pas à l'origine de cette connexion, 
+                    veuillez contacter l'administrateur.
+                </p>
+
+                <hr>
+
+                <p style="font-size: 12px; color: #777;">
+                    Message automatique envoyé par l'application Inventaire DSI.
+                </p>
+
+            </div>
+        </body>
+    </html>
+    """
+    msg = MIMEText(html, "html")
     msg["Subject"] = "Code de connexion — Inventaire DSI"
     msg["From"] = EMAIL
     msg["To"] = destinataire
     #evoie du message
-    with smtplib.SMTP(HOST,PORT) as server:
-        server.starttls()
+    with smtplib.SMTP_SSL(HOST,PORT) as server:
         server.login(EMAIL, MOT_DE_PASSE)
         server.sendmail(EMAIL, destinataire, msg.as_string())
     return code 
@@ -116,13 +209,62 @@ def envoyer_code_2fa(destinataire: str) -> str:
 def generer_mdp_temporaire(destinataire: str) -> str:
     alphabet = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(alphabet) for i in range(10))
-    msg = MIMEText(f"Voici votre code de connexion {password}")
-    msg["Subject"] = "Mot de passe — Inventaire DSI"
+    #construction message
+    html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+
+                <h2 style="color: #4338CA;">
+                    Inventaire DSI - Code de connexion temporaire
+                </h2>
+
+                <p>Bonjour,</p>
+
+                <p>
+                    Un mot de passe temporaire a été généré pour votre compte.
+                </p>
+
+                <p>
+                    Utilisez le mot de passe suivant pour vous connecter :
+                </p>
+
+                <div style="
+                    text-align: center;
+                    margin: 30px;
+                    font-size: 32px;
+                    font-weight: bold;
+                    letter-spacing: 8px;
+                    color: #4338CA;
+                ">
+                    {password}
+                </div>
+
+                <p>
+                    Vous devrez obligatoirement modifier ce mot de passe lors de votre prochaine connexion
+                </p>
+
+                <p>
+                    Si vous n'êtes pas à l'origine de cette connexion, 
+                    veuillez contacter l'administrateur.
+                </p>
+
+                <hr>
+
+                <p style="font-size: 12px; color: #777;">
+                    Message automatique envoyé par l'application Inventaire DSI.
+                </p>
+
+            </div>
+        </body>
+    </html>
+    """    
+    msg = MIMEText(html, "html")
+    msg["Subject"] = "Mot de passe temporaire — Inventaire DSI"
     msg["From"] = EMAIL
     msg["To"] = destinataire
     #evoie du message
-    with smtplib.SMTP(HOST,PORT) as server:
-        server.starttls()
+    with smtplib.SMTP_SSL(HOST,PORT) as server:
         server.login(EMAIL, MOT_DE_PASSE)
         server.sendmail(EMAIL, destinataire, msg.as_string())
     return password

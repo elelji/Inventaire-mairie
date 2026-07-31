@@ -341,30 +341,30 @@
                     {% set color_class = "red" %}
                 {% endif %}
                 
-                <div class="consumable-card status-{{ color_class }}">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="fw-bold text-dark">{{ c.type_consommable }}</div>
-                        <span class="badge bg-status-{{ color_class }} text-white">{{ status_label }}</span>
-                    </div>
-                    
-                    <div class="small text-muted mb-2">
-                        <i class="bi bi-geo-alt"></i> {{ (c.equipement.nom if c.equipement else c.lieu) or "Non renseigné" }}
-                    </div>
-                    
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar bg-status-{{ color_class }}" style="width: {{ pct }}%;"></div>
-                    </div>
-                    
-                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
-                        Installé le : {{ c.date_installation.strftime('%d/%m/%Y') }}
-                    </div>
+               <div class="consumable-card status-{{ color_class }}" onclick="window.location='/consommables'" style="cursor: pointer;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-bold text-dark">{{ c.type_consommable }}</div>
+        <span class="badge bg-status-{{ color_class }} text-white">{{ status_label }}</span>
+    </div>
+    
+    <div class="small text-muted mb-2">
+        <i class="bi bi-geo-alt"></i> {{ (c.equipement.nom if c.equipement else c.lieu) or "Non renseigné" }}
+    </div>
+    
+    <div class="progress" style="height: 6px;">
+        <div class="progress-bar bg-status-{{ color_class }}" style="width: {{ pct }}%;"></div>
+    </div>
+    
+    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+        Installé le : {{ c.date_installation.strftime('%d/%m/%Y') }}
+    </div>
 
-                    {% if status_label == 'A remplacer' %}
-                    <form method="post" action="/consommables/{{ c.id }}/remplacer" class="mt-2">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Remplacer</button>
-                    </form>
-                    {% endif %}
-                </div>
+    {% if status_label == 'A remplacer' %}
+    <form method="post" action="/consommables/{{ c.id }}/remplacer" class="mt-2" onclick="event.stopPropagation()">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Remplacer</button>
+    </form>
+    {% endif %}
+</div>
                 {% endfor %}
             </div>
         </div>

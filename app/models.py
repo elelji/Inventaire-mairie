@@ -8,7 +8,7 @@ from enum import Enum
 class Equipement(SQLModel, table=True):
    id: Optional[int] = Field(default=None, primary_key=True)
    nom: str
-   lieu: str
+   lieu: Optional[str] = None
    usager: Optional[str] = None
    categorie: str
    marque: str

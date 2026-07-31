@@ -100,3 +100,32 @@ def consommable_remplacer(
         logger.error(f"Erreur de remplacement {exc}")
         return HTMLResponse(content="Le consommable ne peut pas être remplacé", status_code=500)
 
+@router.post('/consommables/{consommable_id}/supprimer')
+def consommable_supprimer(
+    consommable_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_permission("supprimer_consommable"))
+):
+    consommable = session.exec(select(Consommable).where(Consommable.id == consommable_id)).first()
+    if not consommable:
+        raise HTTPException(status_code=404, detail="Ce consommable n'existe pas")
+    try:
+        historique = Historique(
+            consommable_id=consommable_id,
+            date_action=date.today(),
+            action="Suppression",
+            utilisateur=current_user.email,
+            nom_equipement=consommable.type_consommable,
+            commentaire="Suppression du consommable",
+        )
+        session.add(historique)
+        session.delete(consommable)
+        session.commit()
+        logger.info('Consommable supprimé')
+        return RedirectResponse(url="/consommables", status_code=303)
+    except Exception as exc:
+        session.rollback()
+        logger.error(f"Erreur de suppression {exc}")
+        return HTMLResponse(content="Le consommable ne peut pas être supprimé", status_code=500)
+

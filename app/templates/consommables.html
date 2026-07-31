@@ -1,69 +1,110 @@
 {% extends "base.html" %}
+{% import "macros.html" as ui with context %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Suivi des consommables</h1>
+<div class="container py-4">
+    
+    <!-- En-tête du module -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1" style="color: #1e1b4b;">
+                <i class="bi bi-box-seam me-2" style="color: #4f46e5;"></i>Suivi des consommables
+            </h1>
+            <p class="text-muted m-0">Gestion et état d'usure des consommables du parc.</p>
+        </div>
+        <!-- Si tu as un bouton d'ajout, tu pourras le placer ici plus tard -->
+    </div>
 
-    <table class="table table-bordered table-hover mt-3">
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>Équipement / Lieu</th>
-                <th>Date d'installation</th>
-                <th>Date de fin estimée</th>
-                <th>Jours restants</th>
-                <th>Progression</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in consommables %}
-            {% set pourcentage = pourcentage_restant_consommable(c) %}
-            {% set statut = statut_consommable(c) %}
-            <tr>
-                <td>{{ c.type_consommable }}</td>
-                <td>
-                    {% if c.equipement %}
-                        {{ c.equipement.nom }} ({{ c.equipement.lieu }} - {{ c.equipement.salle }})
+    <!-- Conteneur style "Panel Cockpit" -->
+    <div class="p-4" style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <tr>
+                        <th class="py-3 text-secondary fw-semibold">Type</th>
+                        <th class="py-3 text-secondary fw-semibold">Équipement / Lieu</th>
+                        <th class="py-3 text-secondary fw-semibold">Installation</th>
+                        <th class="py-3 text-secondary fw-semibold">Fin estimée</th>
+                        <th class="py-3 text-secondary fw-semibold">Restant</th>
+                        <th class="py-3 text-secondary fw-semibold">Progression</th>
+                        <th class="py-3 text-secondary fw-semibold">Statut</th>
+                        <th class="py-3 text-secondary fw-semibold text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consommables %}
+                    {% set pourcentage = pourcentage_restant_consommable(c) %}
+                    {% set statut = statut_consommable(c) %}
+                    <tr>
+                        <td class="fw-medium text-dark">{{ c.type_consommable }}</td>
+                        <td>
+                            {% if c.equipement %}
+                                <span class="fw-semibold">{{ c.equipement.nom }}</span> 
+                                <span class="text-muted small">({{ c.equipement.lieu }} - {{ c.equipement.salle }})</span>
+                            {% else %}
+                                <span class="text-muted">{{ c.lieu }} - {{ c.salle }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ c.date_installation }}</td>
+                        <td class="text-muted small">{{ date_fin_estimee_consommable(c) }}</td>
+                        <td><span class="fw-semibold">{{ jours_restants_consommable(c) }} j</span></td>
+                        <td style="min-width: 140px;">
+                            <div class="progress" style="height: 8px; background-color: #f1f5f9;">
+                                <div class="progress-bar
+                                    {% if statut == 'OK' %}bg-success
+                                    {% elif statut == 'Bientôt épuisé' %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}"
+                                    role="progressbar"
+                                    style="width: {{ pourcentage }}%; border-radius: 4px;"
+                                    aria-valuenow="{{ pourcentage }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="text-end small text-muted mt-1" style="font-size: 0.75rem;">
+                                {{ pourcentage | round(1) }}%
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge px-2 py-1 
+                                {% if statut == 'OK' %}bg-success-subtle text-success
+                                {% elif statut == 'Bientôt épuisé' %}bg-warning-subtle text-warning
+                                {% else %}bg-danger-subtle text-danger
+                                {% endif %}" style="font-weight: 500;">
+                                {{ statut }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap text-end">
+                            {% call ui.protected('modifier_consommable') %}
+                            <form method="post" action="/consommables/{{ c.id }}/remplacer" class="d-inline" onsubmit="return confirm('Confirmer le remplacement de ce consommable ?');">
+                                <button type="submit" class="btn btn-sm" style="color: #4f46e5; border: 1px solid rgba(79, 70, 229, 0.3); background: #f5f3ff;" title="Remplacer">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+                            {% endcall %}
+
+                            {% call ui.protected('supprimer_consommable') %}
+                            <form method="post" action="/consommables/{{ c.id }}/supprimer" class="d-inline" onsubmit="return confirm('Confirmer la suppression de ce consommable ?');">
+                                <button type="submit" class="btn btn-sm text-danger" style="border: 1px solid rgba(220, 53, 69, 0.3); background: #fff5f5;" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endcall %}
+                        </td>
+                    </tr>
                     {% else %}
-                        {{ c.lieu }} - {{ c.salle }}
-                    {% endif %}
-                </td>
-                <td>{{ c.date_installation }}</td>
-                <td>{{ date_fin_estimee_consommable(c) }}</td>
-                <td>{{ jours_restants_consommable(c) }} jours</td>
-                <td style="min-width: 150px;">
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar
-                            {% if statut == 'OK' %}bg-success
-                            {% elif statut == 'Bientôt épuisé' %}bg-warning
-                            {% else %}bg-danger
-                            {% endif %}"
-                            role="progressbar"
-                            style="width: {{ pourcentage }}%;"
-                            aria-valuenow="{{ pourcentage }}"
-                            aria-valuemin="0"
-                            aria-valuemax="100">
-                            {{ pourcentage | round(1) }}%
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <span class="badge
-                        {% if statut == 'OK' %}bg-success
-                        {% elif statut == 'Bientôt épuisé' %}bg-warning
-                        {% else %}bg-danger
-                        {% endif %}">
-                        {{ statut }}
-                    </span>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7" class="text-center">Aucun consommable enregistré.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-3 d-block mb-2 text-secondary"></i>
+                            Aucun consommable enregistré.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

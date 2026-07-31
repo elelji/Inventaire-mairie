@@ -11,12 +11,13 @@ try {
     $infosPoste = Get-CimInstance -ClassName Win32_ComputerSystem
     $infosBios = Get-CimInstance -ClassName Win32_BIOS
     $infosOs = Get-CimInstance -ClassName Win32_OperatingSystem
+    $dateInstallation = (Get-CimInstance Win32_OperatingSystem).InstallDate.ToString("yyyy-MM-dd")
 
     $numero_serie = $infosBios.SerialNumber
     $marque = $infosPoste.Manufacturer
     $modele = $infosPoste.Model
     $version_os = $infosOs.Caption
-    $usager = $infosPoste.UserName
+    $usager = ($infosPoste.UserName -split '\\')[-1]
 
     # Infos Active Directory
     $computerName = $env:COMPUTERNAME
@@ -40,12 +41,14 @@ try {
     # Création de l'objet
     $Poste = @{
         numero_serie = $numero_serie
+	nom = $env:COMPUTERNAME
         marque = $marque
         modele = $modele
         version_os = $version_os
         usager = $usager
         lieu = $lieu
         salle = $salle
+	date_installation = $dateInstallation
     }
 
     # Conversion en JSON
@@ -54,7 +57,7 @@ try {
     # Requête HTTP POST
     # Ne jamais committer la vraie clé ici : elle est renseignée uniquement sur les copies
     # déployées sur les postes (voir README, section clé API agent).
-    $apiKey = "0a7231875de2217ca747050841665f28f8097a90b8f01a45a726c76fb42929ee"
+    $apiKey = "clé API"
     $response = Invoke-RestMethod -Uri "http://localhost:8000/script" -Method Post -Body $json -ContentType "application/json" -Headers @{"X-API-Key" = $apiKey}
 
     # Log succès

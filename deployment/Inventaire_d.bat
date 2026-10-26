@@ -37,7 +37,7 @@ if errorlevel 1 (
 
 if not exist ".env" (
     echo ERREUR : le fichier .env est introuvable a la racine du projet.
-    echo Cree-le avant de lancer l'application ^(voir le README, section 4^).
+    echo Cree-le avant de lancer l'application ^(voir le \docs\PASSATION.md, section 4^).
     pause
     exit /b 1
 )

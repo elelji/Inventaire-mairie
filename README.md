@@ -81,6 +81,28 @@ Deux services Docker : `app` (FastAPI) et `nginx` (reverse proxy).
 
 Voir le [guide de passation](docs/PASSATION.md) : démarrage, sauvegarde, configuration, logs.
 
+## Tester avec des données de démo
+
+Une base entièrement fictive (commune, lieux, usagers, numéros de série inventés) peut être générée :
+
+```
+docker compose exec app python scripts/seed_demo.py --reset
+```
+
+⚠️ `--reset` efface toutes les données existantes.
+
+Contenu : 150 équipements, 14 lieux, garanties, consommables, historique et journaux de connexion.
+
+| Compte                  | Rôle           | Mot de passe |
+|-------------------------|----------------|--------------|
+| admin@demo.local        | Administrateur | Demo2026!    |
+| technicien@demo.local   | Technicien     | Demo2026!    |
+| lecture@demo.local      | Lecture seule  | Demo2026!    |
+
+La double authentification est active. Dans Google Authenticator (ou équivalent), choisir
+« Saisir une clé de configuration » et entrer la clé de démo : `DEMOINVENTAIREDSIDEMOINVENTAIRE2`.
+Cette clé est publique et réservée à la démo.
+
 ## Auteure
 
 Emma L. : [LinkedIn](https://www.linkedin.com/in/emma-louisy-louis-joseph/)

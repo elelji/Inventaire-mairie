@@ -1,6 +1,6 @@
 # Inventaire DSI
 
-Application web de gestion de l'inventaire informatique, développée en stage pour la DSI de la mairie de Gonesse.
+Application web de gestion de l'inventaire informatique, développée en stage pour la DSI de la mairie de ma ville.
 
 ## Contexte
 
